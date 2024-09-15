@@ -1,0 +1,11 @@
+[package]
+name = "secrets"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = "4.5.17"
+dirs = "5.0.1"
+rand = "0.8.5"
+ron = "0.8.1"
+serde = { version = "1.0.210", features = ["derive"] }
