@@ -1,3 +1,6 @@
+use crate::paths::{expand_tilde_path, shorten_path};
+#[allow(unused_imports)]
+use crate::prelude::*;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs::File;
@@ -5,15 +8,34 @@ use std::io::{self, ErrorKind};
 use std::path::Path;
 
 use crate::config::load_config;
+use prettytable::{format::consts as fmt, Cell, Row, Table};
 
-pub fn list_backups() -> io::Result<Vec<String>> {
+fn get_backups() -> io::Result<Vec<String>> {
     let config = load_config()?;
-
     if config.backups.is_empty() {
         return Err(io::Error::new(ErrorKind::NotFound, "No backups found"));
     }
-
     Ok(config.backups.keys().cloned().collect())
+}
+
+fn get_table(titles: Vec<&str>) -> Table {
+    let mut table = Table::new();
+    table.set_format(*fmt::FORMAT_NO_BORDER_LINE_SEPARATOR);
+    table.set_titles(Row::new(titles.iter().map(|x| Cell::new(x)).collect()));
+    table
+}
+
+pub fn list_backups() -> () {
+    match get_backups() {
+        Ok(backups) => {
+            let mut table = get_table(vec!["Available Backups:"]);
+            for backup in backups {
+                table.add_row(row![backup]);
+            }
+            table.printstd();
+        }
+        Err(e) => eprintln!("{}", e),
+    }
 }
 
 #[derive(Deserialize)]
@@ -21,7 +43,7 @@ struct Paths {
     files: HashMap<String, String>, // original_path -> backup_path
 }
 
-pub fn list_backup_files(backup_name: &str) -> io::Result<Vec<String>> {
+fn get_backup_files(backup_name: &str) -> io::Result<Vec<String>> {
     let config = load_config()?;
     let backup_dir = config
         .backups
@@ -49,4 +71,21 @@ pub fn list_backup_files(backup_name: &str) -> io::Result<Vec<String>> {
     };
 
     Ok(paths.files.keys().cloned().collect())
+}
+
+pub fn list_backup_files(backup_name: &str) -> () {
+    match get_backup_files(backup_name) {
+        Ok(files) => {
+            let mut table = get_table(vec![&format!(
+                "Local files contained in backup ({backup_name}):"
+            )]);
+            for file in files {
+                let exp = expand_tilde_path(&file).expect("failed to expand path");
+                let f = exp.as_path().to_str().expect("failed to stringify path");
+                table.add_row(row![shorten_path(f)]);
+            }
+            table.printstd();
+        }
+        Err(e) => eprintln!("Error listing files in backup: {}", e),
+    }
 }
