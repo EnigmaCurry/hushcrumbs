@@ -78,7 +78,7 @@ pub fn shorten_path_relative_home_directory(path: &Path) -> Option<String> {
     // Get the canonicalized home directory (resolves symlinks)
     let home_dir_canonical = home_dir_literal
         .as_ref()
-        .and_then(|home| canonicalize(&home).ok());
+        .and_then(|home| canonicalize(home).ok());
     // First, try to match the path against the canonicalized home directory
     if let Some(home) = home_dir_canonical {
         if path.starts_with(&home) {
@@ -114,7 +114,7 @@ pub fn shorten_path(path: &str) -> String {
 
 pub fn expand_tilde_path(path: &str) -> Option<PathBuf> {
     if path.starts_with("~/") {
-        if let Some(home_dir) = env::var("HOME").ok() {
+        if let Ok(home_dir) = env::var("HOME") {
             // Replace the `~` with the user's home directory
             let home_path = PathBuf::from(home_dir);
             return Some(home_path.join(path.trim_start_matches("~/")));

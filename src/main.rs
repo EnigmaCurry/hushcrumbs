@@ -3,7 +3,6 @@ use clap::{Arg, Command};
 use env_logger::Env;
 use init::{deinit_backup, init_backup};
 use list::{list_backup_files, list_backups};
-use log::Level;
 use restore::{remove_from_backup, restore_backup};
 mod add;
 mod config;

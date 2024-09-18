@@ -12,13 +12,11 @@ pub fn add_to_backup(backup_name: &str, original_path: &str) -> io::Result<()> {
     let mut file_path = original_path.to_string();
 
     let metadata = symlink_metadata(original_path)?;
-    if metadata.is_symlink() {
-        if check_if_file_exists_in_backup(&backup_name, &file_path)? {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
-                "File already exists in backup.",
-            ));
-        }
+    if metadata.is_symlink() && check_if_file_exists_in_backup(backup_name, &file_path)? {
+        return Err(io::Error::new(
+            io::ErrorKind::Other,
+            "File already exists in backup.",
+        ));
     }
 
     // Canonicalize the path
@@ -55,5 +53,5 @@ pub fn add_to_backup(backup_name: &str, original_path: &str) -> io::Result<()> {
     //debug!("symlinked");
 
     // Update paths.ron with the original path
-    update_paths_ron(backup_name, &Path::new(&file_path.clone()), &new_path)
+    update_paths_ron(backup_name, Path::new(&file_path.clone()), &new_path)
 }

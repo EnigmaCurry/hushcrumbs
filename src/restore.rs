@@ -1,12 +1,12 @@
 use crate::paths::{
-    absolute_path, file_hash, get_backup_paths, reverse_files_map, set_backup_paths, Paths,
+    absolute_path, get_backup_paths, reverse_files_map, set_backup_paths, Paths,
 };
 #[allow(unused_imports)]
 use crate::prelude::*;
 
 use crate::config::load_config;
 use inquire::Confirm;
-use std::fs::{self, canonicalize, File, OpenOptions};
+use std::fs::{self, canonicalize, File};
 use std::io::{self, ErrorKind};
 use std::path::Path;
 
@@ -149,7 +149,7 @@ pub fn remove_from_backup(backup_name: &str, original_path: &str, delete: bool) 
     match canonicalize(original_path) {
         Err(_) => {
             if !delete {
-                return Err(io::Error::new(io::ErrorKind::InvalidData, format!("The existing path does not exist. To remove this entry from the backup, without restoring it, add the --delete argument.")));
+                return Err(io::Error::new(io::ErrorKind::InvalidData, "The existing path does not exist. To remove this entry from the backup, without restoring it, add the --delete argument.".to_string()));
             } else {
                 destroy_backup_file(
                     backup_name,
@@ -179,7 +179,7 @@ pub fn remove_from_backup(backup_name: &str, original_path: &str, delete: bool) 
         debug!("id: {id}");
         match files.get(id) {
             None => {
-                return Err(io::Error::new(
+                Err(io::Error::new(
                     ErrorKind::InvalidData,
                     format!("File not found in backup: {original:?}"),
                 ))
@@ -214,18 +214,16 @@ pub fn remove_from_backup(backup_name: &str, original_path: &str, delete: bool) 
                 Ok(())
             }
         }
+    } else if original.exists() && delete {
+        destroy_backup_file(
+            backup_name,
+            absolute_path(original_path)
+                .to_str()
+                .expect("failed to_str"),
+        )
+    } else if original.exists() {
+        return Err(io::Error::new(io::ErrorKind::InvalidData, format!("A conflicting non-backup file exists in the original path: '{}'. To remove this entry from the backup without restoring it, add the --delete argument.", original_path)));
     } else {
-        if original.exists() && delete {
-            destroy_backup_file(
-                backup_name,
-                absolute_path(original_path)
-                    .to_str()
-                    .expect("failed to_str"),
-            )
-        } else if original.exists() {
-            return Err(io::Error::new(io::ErrorKind::InvalidData, format!("A conflicting non-backup file exists in the original path: '{}'. To remove this entry from the backup without restoring it, add the --delete argument.", original_path)));
-        } else {
-            return Err(io::Error::new(io::ErrorKind::InvalidData, format!("The existing path does not exist. To remove this entry from the backup, without restoring it, add the --delete argument.")));
-        }
+        return Err(io::Error::new(io::ErrorKind::InvalidData, "The existing path does not exist. To remove this entry from the backup, without restoring it, add the --delete argument.".to_string()));
     }
 }

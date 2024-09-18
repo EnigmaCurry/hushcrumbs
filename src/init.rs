@@ -26,10 +26,10 @@ pub fn init_backup(backup_name: &str, path: Option<&str>) -> io::Result<()> {
     }
     debug!("creating directory: {:?}", &backup_path);
     // Create the backup directory
-    fs::create_dir(&backup_path)?;
+    fs::create_dir(backup_path)?;
 
     // Convert to absolute path
-    let absolute_backup_path = fs::canonicalize(&backup_path)?;
+    let absolute_backup_path = fs::canonicalize(backup_path)?;
 
     // Update the config with the absolute path
     update_config(backup_name, &absolute_backup_path)?;

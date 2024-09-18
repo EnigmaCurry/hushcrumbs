@@ -25,7 +25,7 @@ fn get_table(titles: Vec<&str>) -> Table {
     table
 }
 
-pub fn list_backups() -> () {
+pub fn list_backups() {
     match get_backups() {
         Ok(backups) => {
             let mut table = get_table(vec!["Available Backups:"]);
@@ -73,7 +73,7 @@ fn get_backup_files(backup_name: &str) -> io::Result<Vec<String>> {
     Ok(paths.files.keys().cloned().collect())
 }
 
-pub fn list_backup_files(backup_name: &str) -> () {
+pub fn list_backup_files(backup_name: &str) {
     match get_backup_files(backup_name) {
         Ok(files) => {
             let mut table = get_table(vec![&format!(
