@@ -189,15 +189,11 @@ pub fn set_backup_paths(backup_name: &str, paths: Paths) -> io::Result<()> {
 
 pub fn check_if_file_exists_in_backup(backup_name: &str, original_path: &str) -> io::Result<bool> {
     let paths = get_backup_paths(backup_name)?;
-    if paths
-        .files
-        .get(
-            absolute_path(original_path)
-                .to_str()
-                .expect("failed to get absolute path"),
-        )
-        .is_some()
-    {
+    if paths.files.contains_key(
+        absolute_path(original_path)
+            .to_str()
+            .expect("failed to get absolute path"),
+    ) {
         Ok(true)
     } else {
         Ok(false)

@@ -1,6 +1,4 @@
-use crate::paths::{
-    absolute_path, get_backup_paths, reverse_files_map, set_backup_paths, Paths,
-};
+use crate::paths::{absolute_path, get_backup_paths, reverse_files_map, set_backup_paths, Paths};
 #[allow(unused_imports)]
 use crate::prelude::*;
 
@@ -102,7 +100,7 @@ fn remove_backup_entry(backup_name: &str, original_path: &str) -> io::Result<()>
     // Remove the file from the paths map
     debug!("paths: {paths:?}");
     debug!("original_path: {original_path:?}");
-    paths.files.remove(&original_path.to_string());
+    paths.files.remove(original_path);
     set_backup_paths(backup_name, paths)
 }
 
@@ -178,12 +176,10 @@ pub fn remove_from_backup(backup_name: &str, original_path: &str, delete: bool) 
             .expect("failed to_str()");
         debug!("id: {id}");
         match files.get(id) {
-            None => {
-                Err(io::Error::new(
-                    ErrorKind::InvalidData,
-                    format!("File not found in backup: {original:?}"),
-                ))
-            }
+            None => Err(io::Error::new(
+                ErrorKind::InvalidData,
+                format!("File not found in backup: {original:?}"),
+            )),
             Some(f) => {
                 original = Path::new(f);
                 let a = absolute_path(original_path);

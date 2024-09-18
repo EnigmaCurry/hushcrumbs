@@ -4,6 +4,7 @@ use env_logger::Env;
 use init::{deinit_backup, init_backup};
 use list::{list_backup_files, list_backups};
 use restore::{remove_from_backup, restore_backup};
+use std::str::FromStr;
 mod add;
 mod config;
 mod init;
@@ -25,6 +26,7 @@ fn main() {
         .arg(
             Arg::new("log")
                 .long("log")
+                .global(true)
                 .num_args(1)
                 .value_name("LEVEL")
                 .value_parser(["trace", "debug", "info", "warn", "error"])
@@ -33,6 +35,7 @@ fn main() {
         .arg(
             Arg::new("verbose")
                 .short('v')
+                .global(true)
                 .help("Sets the log level to debug")
                 .action(clap::ArgAction::SetTrue),
         )
@@ -94,16 +97,19 @@ fn main() {
     let matches = cmd.clone().get_matches();
 
     // Configure logging:
-    env_logger::Builder::from_env(
-        Env::default().default_filter_or(
-            matches
-                .get_one::<String>("log")
-                .map(|s| s.as_str())
-                .unwrap_or("info"),
-        ),
-    )
-    .format_timestamp(None)
-    .init();
+    let log_level = if matches.get_flag("verbose") {
+        Some("debug".to_string())
+    } else {
+        matches.get_one::<String>("log").cloned()
+    };
+    // Use RUST_LOG env var if no command-line option is provided
+    let log_level = log_level.or_else(|| std::env::var("RUST_LOG").ok());
+    // Fallback to "info" if neither command-line option nor env var is set
+    let log_level = log_level.unwrap_or_else(|| "info".to_string());
+    env_logger::Builder::new()
+        .filter_level(log::LevelFilter::from_str(&log_level).unwrap_or(log::LevelFilter::Info))
+        .format_timestamp(None)
+        .init();
 
     // Print help if no subcommand is given:
     if matches.subcommand_name().is_none() {
