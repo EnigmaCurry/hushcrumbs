@@ -17,6 +17,10 @@ impl TestBed {
     pub fn new() -> Self {
         let temp_dir = TempDir::new().expect("Failed to create temp directory");
         let binary = Command::cargo_bin(env!("CARGO_PKG_NAME")).expect("Binary not found");
+        info!(
+            "Created temporary directory: {}",
+            temp_dir.path().to_str().unwrap()
+        );
         Self { temp_dir, binary }
     }
 }
