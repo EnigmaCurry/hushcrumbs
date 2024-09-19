@@ -63,5 +63,5 @@ just run [ARGS ...]
 alias secrets='just -f ~/git/vendor/enigmacurry/secrets/Justfile run'
 ```
 
-Now you can `secrets` with any arguments, from any directory, and it
+Now you can `secrets` from any directory, with any arguments, and it
 will automatically rebuild from source and run it.
