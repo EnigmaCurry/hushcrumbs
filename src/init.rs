@@ -96,11 +96,11 @@ pub fn deinit_backup(backup_name: &str) -> io::Result<()> {
     };
     match get_backup_paths(backup_name) {
         Ok(paths) => {
-            if paths.files.len() > 0 {
-                return Err(io::Error::new(
+            if !paths.files.is_empty() {
+                Err(io::Error::new(
                     io::ErrorKind::InvalidData,
                     format!("Backup '{backup_name}' still has active symlinks. deinit is prevented in this state. "),
-                ));
+                ))
             } else {
                 remove()
             }

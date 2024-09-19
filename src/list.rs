@@ -82,7 +82,7 @@ fn get_backup_files(backup_name: &str) -> io::Result<Vec<String>> {
 pub fn list_backup_files(backup_name: &str) -> io::Result<()> {
     match get_backup_files(backup_name) {
         Ok(files) => {
-            if files.len() > 0 {
+            if !files.is_empty() {
                 let mut table = get_table(vec![&format!(
                     "Local files contained in backup ({backup_name}):"
                 )]);
@@ -95,7 +95,7 @@ pub fn list_backup_files(backup_name: &str) -> io::Result<()> {
                 table.printstd();
                 Ok(())
             } else {
-                eprintln!("");
+                eprintln!();
                 eprintln!("No files found in backup.");
                 Err(io::Error::new(
                     ErrorKind::InvalidData,

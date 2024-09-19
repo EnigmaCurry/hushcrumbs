@@ -1,9 +1,7 @@
 use add::add_to_backup;
 use clap::{Arg, Command};
 use confirm::{confirm, ConfirmProps, NO_CONFIRM};
-use env_logger::Env;
 use init::{deinit_backup, init_backup};
-use inquire::Confirm;
 use list::{list_backup_files, list_backups};
 use restore::{remove_from_backup, restore_backup};
 use std::str::FromStr;

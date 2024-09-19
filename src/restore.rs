@@ -4,7 +4,6 @@ use crate::prelude::*;
 
 use crate::config::load_config;
 use crate::confirm::{confirm, ConfirmProps};
-use std::default;
 use std::fs::{self, canonicalize, File};
 use std::io::{self, ErrorKind};
 use std::path::Path;
