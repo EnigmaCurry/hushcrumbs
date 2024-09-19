@@ -64,3 +64,21 @@ alias secrets='just -f ~/git/vendor/enigmacurry/secrets/Justfile run'
 
 Now you can run `secrets` from any directory, with any arguments, and it
 will automatically rebuild from source and run it.
+
+## Testing
+
+This project has incomplete testing.
+
+### Run tests
+
+```
+# Run all tests:
+just test
+
+# Run a single test:
+just test test_cli_help
+
+# Verbose logging (which normally would be hidden for passing tests)
+just test-verbose test_cli_help
+```
+
