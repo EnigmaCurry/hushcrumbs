@@ -1,12 +1,15 @@
 use add::add_to_backup;
 use clap::{Arg, Command};
+use confirm::{confirm, ConfirmProps, NO_CONFIRM};
 use env_logger::Env;
 use init::{deinit_backup, init_backup};
+use inquire::Confirm;
 use list::{list_backup_files, list_backups};
 use restore::{remove_from_backup, restore_backup};
 use std::str::FromStr;
 mod add;
 mod config;
+mod confirm;
 mod init;
 mod list;
 mod paths;
@@ -39,6 +42,13 @@ fn main() {
                 .help("Sets the log level to debug")
                 .action(clap::ArgAction::SetTrue),
         )
+        .arg(
+            Arg::new("no-confirm")
+                .long("no-confirm")
+                .global(true)
+                .help("Disables all interactive confirmation (careful!)")
+                .action(clap::ArgAction::SetTrue),
+        )
         .subcommand(
             Command::new("init")
                 .about("Creates a new backup directory")
@@ -68,7 +78,7 @@ fn main() {
                 .visible_alias("remove")
                 .about("Removes a file from the backup")
                 .arg(Arg::new("BACKUP_NAME").required(true))
-                .arg(Arg::new("PATH").required(false))
+                .arg(Arg::new("PATH").required(true))
                 .arg(
                     Arg::new("delete")
                         .long("delete")
@@ -110,6 +120,11 @@ fn main() {
         .filter_level(log::LevelFilter::from_str(&log_level).unwrap_or(log::LevelFilter::Info))
         .format_timestamp(None)
         .init();
+
+    // Set global NO_CONFIRM flag:
+    if matches.get_flag("no-confirm") {
+        *NO_CONFIRM.write().unwrap() = true;
+    }
 
     // Print help if no subcommand is given:
     if matches.subcommand_name().is_none() {
@@ -180,7 +195,7 @@ fn main() {
             let backup_name = sub_matches.get_one::<String>("BACKUP_NAME").unwrap();
             let file_path = sub_matches.get_one::<String>("PATH");
             let delete = sub_matches.get_flag("delete");
-            match file_path {
+            let remove = || match file_path {
                 Some(f) => match remove_from_backup(backup_name, f.as_str(), delete) {
                     Ok(_) => 0,
                     Err(e) => {
@@ -192,15 +207,34 @@ fn main() {
                     eprintln!("File does not exist: {file_path:?}");
                     1
                 }
+            };
+            if delete {
+                match confirm(ConfirmProps {
+                    message: "Do you want to permanently delete this file AND its backup?"
+                        .to_string(),
+                    help: file_path.cloned(),
+                    ..Default::default()
+                }) {
+                    Ok(true) => remove(),
+                    _ => 1,
+                }
+            } else {
+                //Remove without confirmation:
+                remove()
             }
         }
         Some(("ls", sub_matches)) => {
             if let Some(backup_name) = sub_matches.get_one::<String>("BACKUP_NAME") {
-                list_backup_files(backup_name);
+                match list_backup_files(backup_name) {
+                    Err(_) => 1,
+                    _ => 0,
+                }
             } else {
-                list_backups();
+                match list_backups() {
+                    Err(_) => 1,
+                    _ => 0,
+                }
             }
-            0
         }
         Some(("commit", sub_matches)) => {
             let backup_name = sub_matches.get_one::<String>("BACKUP_NAME").unwrap();

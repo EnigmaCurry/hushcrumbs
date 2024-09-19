@@ -3,7 +3,8 @@ use crate::paths::{absolute_path, get_backup_paths, reverse_files_map, set_backu
 use crate::prelude::*;
 
 use crate::config::load_config;
-use inquire::Confirm;
+use crate::confirm::{confirm, ConfirmProps};
+use std::default;
 use std::fs::{self, canonicalize, File};
 use std::io::{self, ErrorKind};
 use std::path::Path;
@@ -61,14 +62,10 @@ pub fn restore_backup(backup_name: &str, copy: bool, overwrite: bool) -> io::Res
                 }
             } else if !overwrite {
                 // Check if the original path exists and handle overwrite logic
-                let confirm = Confirm::new(&format!(
-                    "File {} already exists. Overwrite?",
-                    original.display()
-                ))
-                .with_default(false)
-                .prompt();
-
-                match confirm {
+                match confirm(ConfirmProps {
+                    message: format!("File {} already exists. Overwrite?", original.display()),
+                    ..Default::default()
+                }) {
                     Ok(true) => (),        // User chose to overwrite
                     Ok(false) => continue, // User chose not to overwrite
                     Err(_) => {
@@ -192,7 +189,9 @@ pub fn remove_from_backup(backup_name: &str, original_path: &str, delete: bool) 
                         fs::remove_file(original)?;
                     }
                     debug!("removed symlink");
-                    return Ok(());
+                    destroy_backup_file(backup_name, abs_path)
+                        .expect("failed to remove backup file");
+                    info!("File permanently deleted: {original_path:?}");
                 } else {
                     // Restore the original file by copying it from the backup
                     if original.exists() && original.is_symlink() {
@@ -203,10 +202,11 @@ pub fn remove_from_backup(backup_name: &str, original_path: &str, delete: bool) 
                     debug!("original: {original:?}");
                     fs::copy(backup, original)?; // Restore the original file
                     debug!("copied");
+                    destroy_backup_file(backup_name, abs_path)
+                        .expect("failed to remove backup file");
+                    info!("File restored and removed from backup: {original_path:?}");
                 }
 
-                destroy_backup_file(backup_name, abs_path).expect("failed to remove backup file");
-                info!("File restored and removed from backup: {original_path:?}");
                 Ok(())
             }
         }

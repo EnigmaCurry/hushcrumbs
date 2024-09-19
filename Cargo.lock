@@ -650,6 +650,7 @@ dependencies = [
  "env_logger",
  "inquire",
  "log",
+ "once_cell",
  "prettytable",
  "rand",
  "ron",

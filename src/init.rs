@@ -1,3 +1,5 @@
+use crate::config::load_config;
+use crate::paths::get_backup_paths;
 #[allow(unused_imports)]
 use crate::prelude::*;
 
@@ -47,13 +49,7 @@ pub fn update_config(backup_name: &str, path: &Path) -> io::Result<()> {
     }
 
     // Load or initialize the configuration
-    let mut config: Config = if config_path.exists() {
-        ron::de::from_reader(fs::File::open(&config_path)?).unwrap_or_default()
-    } else {
-        Config {
-            backups: HashMap::new(),
-        }
-    };
+    let mut config = load_config()?;
 
     // Add or update the backup name and path in the config
     config
@@ -71,40 +67,44 @@ pub fn deinit_backup(backup_name: &str) -> io::Result<()> {
     let config_path = dirs::config_dir().unwrap().join("secrets/config.ron");
 
     // Load the existing config
-    let mut config: Config = if config_path.exists() {
-        ron::de::from_reader(fs::File::open(&config_path)?).unwrap_or_default()
-    } else {
-        return Err(io::Error::new(
-            io::ErrorKind::NotFound,
-            format!("Config file not found: {config_path:?}"),
-        ));
+    let mut config = load_config()?;
+    let mut remove = || {
+        // Remove the backup from the config
+        if config.backups.remove(backup_name).is_none() {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                format!("Backup not found: {backup_name}"),
+            ));
+        }
+        // Save the updated config back to the file
+        let mut file = fs::OpenOptions::new()
+            .write(true)
+            .truncate(true)
+            .open(&config_path)?;
+        let serialized = ron::ser::to_string(&config).map_err(|e| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("Failed to serialize config: {}", e),
+            )
+        })?;
+        file.write_all(serialized.as_bytes())?;
+        println!(
+            "Backup '{}' has been removed from the configuration.",
+            backup_name
+        );
+        Ok(())
     };
-
-    // Remove the backup from the config
-    if config.backups.remove(backup_name).is_none() {
-        return Err(io::Error::new(
-            io::ErrorKind::NotFound,
-            format!("Backup not found: {backup_name}"),
-        ));
+    match get_backup_paths(backup_name) {
+        Ok(paths) => {
+            if paths.files.len() > 0 {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    format!("Backup '{backup_name}' still has active symlinks. deinit is prevented in this state. "),
+                ));
+            } else {
+                remove()
+            }
+        }
+        Err(_) => remove(),
     }
-
-    // Save the updated config back to the file
-    let mut file = fs::OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .open(&config_path)?;
-    let serialized = ron::ser::to_string(&config).map_err(|e| {
-        io::Error::new(
-            io::ErrorKind::InvalidData,
-            format!("Failed to serialize config: {}", e),
-        )
-    })?;
-    file.write_all(serialized.as_bytes())?;
-
-    println!(
-        "Backup '{}' has been removed from the configuration.",
-        backup_name
-    );
-
-    Ok(())
 }
