@@ -15,3 +15,36 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
 
+## Development
+
+These instructions are specific to Fedora; minor adjustments for your
+platform may be required.
+
+### Install host dependencies
+
+```
+sudo dnf install git openssh rustup
+sudo dnf group install "C Development Tools and Libraries" "Development Tools"
+```
+
+### Install rust and cargo
+
+```
+rustup-init ## just press enter when prompted for default selection
+. "$HOME/.cargo/env"
+```
+
+### Clone source repository
+
+```
+git clone git@github.com:EnigmaCurry/secrets.git \
+  ~/git/vendor/enigmacurry/secrets
+cd ~/git/vendor/enigmacurry/secrets
+```
+
+### Install development dependencies
+
+```
+cargo install just
+just deps
+```
