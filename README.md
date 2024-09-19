@@ -48,3 +48,20 @@ cd ~/git/vendor/enigmacurry/secrets
 cargo install just
 just deps
 ```
+
+### Build and run development app
+
+```
+just run help
+just run [ARGS ...]
+```
+
+### Create development alias
+
+```
+## Add this to ~/.bashrc or equivalent:
+alias secrets='just -f ~/git/vendor/enigmacurry/secrets/Justfile run'
+```
+
+Now you can `secrets` with any arguments, from any directory, and it
+will automatically rebuild from source and run it.
