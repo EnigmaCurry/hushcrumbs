@@ -18,7 +18,8 @@ deps:
 
 [no-cd]
 run *args:
-    cargo run --manifest-path "$(dirname $JUSTFILE)/Cargo.toml" -- {{args}}
+    env
+    cargo run --manifest-path "${current_dir}/Cargo.toml" -- {{args}}
 
 build:
     cargo build
