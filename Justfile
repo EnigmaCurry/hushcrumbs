@@ -16,6 +16,9 @@ deps:
     @echo 'For example: `just run help`'
     @echo
 
+bin-deps:
+    cargo binstall --no-confirm cargo-nextest
+
 [no-cd]
 run *args:
     cargo run --manifest-path "${current_dir}/Cargo.toml" -- {{args}}

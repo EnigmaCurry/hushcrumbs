@@ -42,8 +42,8 @@ jobs:
     - name: Install Just
       run: cargo binstall --no-confirm just
 
-    - name: Install other dependencies listed in Justfile (deps)
-      run: just deps
+    - name: Install other dependencies listed in Justfile (bin-deps)
+      run: just bin-deps
 
     - name: Build
       run: just build 
