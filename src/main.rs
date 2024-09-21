@@ -1,10 +1,11 @@
 use add::add_to_backup;
-use clap::{Arg, Command};
-use confirm::{confirm, ConfirmProps, NO_CONFIRM};
+use clap::{Arg, ArgMatches, Command};
+use confirm::{confirm, ConfirmProps};
 use init::{deinit_backup, init_backup};
 use list::{list_backup_files, list_backups};
+use once_cell::sync::Lazy;
 use restore::{remove_from_backup, restore_backup};
-use std::str::FromStr;
+use std::{path::PathBuf, str::FromStr, sync::Mutex};
 mod add;
 mod config;
 mod confirm;
@@ -19,11 +20,34 @@ extern crate prettytable;
 
 use prelude::*;
 
+/// Options is a subset of the command line options that need to be shared globally:
+struct Options {
+    config_file: PathBuf,
+    no_confirm: bool,
+}
+
 fn main() {
-    let mut cmd = Command::new("secrets")
+    let cmd = Command::new("secrets")
         .version("1.0")
         .author("Author Name <email@example.com>")
         .about("A CLI backup tool")
+        .arg(
+            Arg::new("config")
+                .long("config")
+                .short('c')
+                .global(true)
+                .num_args(1)
+                .value_name("CONFIG_FILE")
+                .help("Sets the path to the global config file")
+                .default_value(
+                    dirs::config_dir()
+                        .expect("Could not find user config directory")
+                        .join(env!("CARGO_PKG_NAME"))
+                        .join("config.ron")
+                        .to_str()
+                        .expect("Could not make string for user config directory"),
+                ),
+        )
         .arg(
             Arg::new("log")
                 .long("log")
@@ -102,7 +126,7 @@ fn main() {
                 .about("Pushes a backup (placeholder)")
                 .arg(Arg::new("BACKUP_NAME").required(true)),
         );
-    let matches = cmd.clone().get_matches();
+    let matches = cmd.get_matches();
 
     // Configure logging:
     let log_level = if matches.get_flag("verbose") {
@@ -118,20 +142,18 @@ fn main() {
         .filter_level(log::LevelFilter::from_str(&log_level).unwrap_or(log::LevelFilter::Info))
         .format_timestamp(None)
         .init();
-
-    // Set global NO_CONFIRM flag:
-    if matches.get_flag("no-confirm") {
-        *NO_CONFIRM.write().unwrap() = true;
-    }
+    debug!("logging initialized.");
 
     // Print help if no subcommand is given:
     if matches.subcommand_name().is_none() {
+        let mut cmd = GLOBAL_CMD.lock().expect("Could not get GLOBAL_CMD");
         cmd.print_help().unwrap();
         println!();
         return;
     }
 
     // Handle the subcommands:
+    eprintln!("");
     let exit_code = match matches.subcommand() {
         Some(("init", sub_matches)) => {
             let backup_name = sub_matches.get_one::<String>("BACKUP_NAME").unwrap();
@@ -224,12 +246,18 @@ fn main() {
         Some(("ls", sub_matches)) => {
             if let Some(backup_name) = sub_matches.get_one::<String>("BACKUP_NAME") {
                 match list_backup_files(backup_name) {
-                    Err(_) => 1,
+                    Err(e) => {
+                        eprintln!("{e}");
+                        1
+                    }
                     _ => 0,
                 }
             } else {
                 match list_backups() {
-                    Err(_) => 1,
+                    Err(e) => {
+                        eprintln!("{e}");
+                        1
+                    }
                     _ => 0,
                 }
             }
@@ -247,5 +275,6 @@ fn main() {
         _ => 1,
     };
 
+    eprintln!("");
     std::process::exit(exit_code);
 }

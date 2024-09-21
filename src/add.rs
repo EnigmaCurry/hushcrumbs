@@ -27,12 +27,12 @@ pub fn add_to_backup(backup_name: &str, original_path: &str) -> io::Result<()> {
         .to_string();
 
     let config = load_config()?;
-    //debug!("loaded config");
+    debug!("loaded config");
     let backup_dir = config.backups.get(backup_name).ok_or(io::Error::new(
         io::ErrorKind::NotFound,
         "Backup does not exist",
     ))?;
-    //debug!("backup found");
+    debug!("backup found");
 
     // Hash the original path to form the backup file id:
     let new_path = Path::new(backup_dir).join(file_hash(
@@ -41,16 +41,16 @@ pub fn add_to_backup(backup_name: &str, original_path: &str) -> io::Result<()> {
     debug!("new_path: {new_path:?}");
     debug!("file_path: {file_path:?}");
     let metadata = symlink_metadata(original_path)?;
-    //debug!("metadata loaded");
+    debug!("metadata loaded");
     if metadata.is_symlink() {
         return Err(io::Error::new(io::ErrorKind::Other, "Cannot add symlink"));
     }
 
     copy(original_path, &new_path)?;
     remove_file(original_path)?;
-    //debug!("moved");
+    debug!("moved");
     symlink(&new_path, absolute_path.clone())?;
-    //debug!("symlinked");
+    debug!("symlinked");
 
     // Update paths.ron with the original path
     update_paths_ron(backup_name, Path::new(&file_path.clone()), &new_path)

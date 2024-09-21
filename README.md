@@ -1,6 +1,11 @@
 # secrets
 
-This is another secrets manager.
+This is another secrets manager. Its job is to manage disperse files
+anywhere in your filesystem, moving them into a central repostiory,
+and replacing the originals with symlinks. This tool is capable of
+performing encrypted backups to a git repository (via
+[git-crypt](https://github.com/AGWA/git-crypt)), and facilitate future
+restoration.
 
 ## STATUS: EXPERIMENTAL
 
@@ -80,5 +85,8 @@ just test test_cli_help
 
 # Verbose logging (which normally would be hidden for passing tests)
 just test-verbose test_cli_help
+
+# Auto run tests on source change:
+just test-watch
 ```
 

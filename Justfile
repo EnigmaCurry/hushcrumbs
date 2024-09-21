@@ -26,11 +26,19 @@ build:
 test *args:
     cargo nextest run --release -- {{args}}
 
+test-watch *args:
+    cargo watch -s "clear && cargo nextest run --release -- {{args}}"
+
 test-verbose *args:
     RUST_TEST_THREADS=1 cargo nextest run --nocapture --release -- {{args}}
+
+test-watch-verbose *args:
+    RUST_TEST_THREADS=1 cargo watch -s "clear && cargo nextest run --nocapture --release -- {{args}}"
+    
 
 clippy:
     RUSTFLAGS="-D warnings" cargo clippy --color=always 2>&1 --tests | less -R
 
 clippy-fix:
     RUSTFLAGS="-D warnings" cargo clippy --fix --color=always 2>&1 --tests | less -R
+    

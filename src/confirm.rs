@@ -1,7 +1,5 @@
+use crate::GLOBAL_CMD_MATCHES;
 use inquire::Confirm;
-use once_cell::sync::Lazy;
-use std::sync::RwLock;
-pub static NO_CONFIRM: Lazy<RwLock<bool>> = Lazy::new(|| RwLock::new(false));
 
 #[derive(Default, Debug)]
 pub struct ConfirmProps {
@@ -11,9 +9,10 @@ pub struct ConfirmProps {
 }
 
 pub fn confirm(props: ConfirmProps) -> Result<bool, inquire::InquireError> {
-    if *NO_CONFIRM
-        .read()
-        .expect("Could not read lazy global NO_CONFIRM")
+    if GLOBAL_CMD_MATCHES
+        .lock()
+        .expect("Could not read GLOBAL_CMD_MATCHES")
+        .get_flag("no-confirm")
     {
         Ok(true)
     } else {

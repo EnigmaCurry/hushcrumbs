@@ -13,7 +13,6 @@ use prettytable::{format::consts as fmt, Cell, Row, Table};
 fn get_backups() -> io::Result<Vec<String>> {
     let config = load_config()?;
     if config.backups.is_empty() {
-        eprintln!();
         return Err(io::Error::new(ErrorKind::NotFound, "No backups found."));
     }
     Ok(config.backups.keys().cloned().collect())
@@ -29,18 +28,17 @@ fn get_table(titles: Vec<&str>) -> Table {
 pub fn list_backups() -> io::Result<()> {
     match get_backups() {
         Ok(backups) => {
-            let mut table = get_table(vec!["Available Backups:"]);
+            let mut table = get_table(vec!["Backup Name", "Backup Path"]);
             for backup in backups {
-                table.add_row(row![backup]);
+                table.add_row(row![
+                    backup,
+                    get_backup_path(&backup).unwrap_or_else(|e| e.to_string())
+                ]);
             }
-            println!();
             table.printstd();
             Ok(())
         }
-        Err(e) => {
-            eprintln!("{}", e);
-            Err(e)
-        }
+        Err(e) => Err(e),
     }
 }
 
@@ -49,14 +47,31 @@ struct Paths {
     files: HashMap<String, String>, // original_path -> backup_path
 }
 
-fn get_backup_files(backup_name: &str) -> io::Result<Vec<String>> {
+fn get_backup_path(backup_name: &str) -> io::Result<String> {
     let config = load_config()?;
-    let backup_dir = config
+    match config
         .backups
         .get(backup_name)
-        .ok_or(io::Error::new(ErrorKind::NotFound, "Backup not found"))?;
+        .ok_or(io::Error::new(ErrorKind::NotFound, "Backup not found"))
+        .cloned()
+    {
+        Ok(path) => {
+            if Path::new(&path).exists() {
+                Ok(path)
+            } else {
+                Err(io::Error::new(
+                    ErrorKind::InvalidData,
+                    format!("Backup directory is missing: {path}"),
+                ))
+            }
+        }
+        Err(e) => Err(e),
+    }
+}
 
-    let paths_file = Path::new(backup_dir).join("paths.ron");
+fn get_backup_files(backup_name: &str) -> io::Result<Vec<String>> {
+    let backup_dir = get_backup_path(backup_name)?;
+    let paths_file = Path::new(&backup_dir).join("paths.ron");
 
     if !paths_file.exists() {
         return Err(io::Error::new(
@@ -80,6 +95,14 @@ fn get_backup_files(backup_name: &str) -> io::Result<Vec<String>> {
 }
 
 pub fn list_backup_files(backup_name: &str) -> io::Result<()> {
+    let backup_dir = &get_backup_path(backup_name)?;
+    let backup_dir = Path::new(backup_dir);
+    if !backup_dir.exists() {
+        return Err(io::Error::new(
+            ErrorKind::InvalidData,
+            format!("Backup directory does not exist: {backup_dir:?}"),
+        ));
+    }
     match get_backup_files(backup_name) {
         Ok(files) => {
             if !files.is_empty() {
@@ -95,18 +118,12 @@ pub fn list_backup_files(backup_name: &str) -> io::Result<()> {
                 table.printstd();
                 Ok(())
             } else {
-                eprintln!();
-                eprintln!("No files found in backup.");
                 Err(io::Error::new(
                     ErrorKind::InvalidData,
                     "No files found in backup",
                 ))
             }
         }
-        Err(e) => {
-            eprintln!();
-            eprintln!("{}: {backup_name}", e);
-            Err(e)
-        }
+        Err(e) => Err(e),
     }
 }

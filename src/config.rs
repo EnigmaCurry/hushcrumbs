@@ -1,6 +1,7 @@
 #[allow(unused_imports)]
 use crate::prelude::*;
 
+use crate::GLOBAL_CMD_MATCHES;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
@@ -33,8 +34,4 @@ pub fn load_config() -> io::Result<Config> {
     Ok(config)
 }
 
-fn get_config_path() -> PathBuf {
-    let mut config_dir = dirs::config_dir().expect("Failed to find config directory");
-    config_dir.push("secrets/config.ron");
-    config_dir
-}
+fn get_config_path() -> PathBuf {}
