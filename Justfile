@@ -30,16 +30,16 @@ build-watch *args:
     cargo watch -s "clear && cargo build {{args}}"
 
 test *args:
-    cargo nextest run --release -- {{args}}
+    cargo nextest run {{args}}
 
 test-watch *args:
-    cargo watch -s "clear && cargo nextest run --release -- {{args}}"
+    cargo watch -s "clear && cargo nextest run {{args}}"
 
 test-verbose *args:
-    RUST_TEST_THREADS=1 cargo nextest run --nocapture --release -- {{args}}
+    RUST_TEST_THREADS=1 cargo nextest run --nocapture {{args}}
 
 test-watch-verbose *args:
-    RUST_TEST_THREADS=1 cargo watch -s "clear && cargo nextest run --nocapture --release -- {{args}}"
+    RUST_TEST_THREADS=1 cargo watch -s "clear && cargo nextest run --nocapture -- {{args}}"
     
 clippy *args:
     RUSTFLAGS="-D warnings" cargo clippy {{args}} --color=always 2>&1 --tests | less -R
