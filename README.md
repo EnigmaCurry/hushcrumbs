@@ -32,6 +32,127 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
 
+## Install
+
+[Download the latest release for your platform.](https://github.com/EnigmaCurry/dry_console/releases)
+
+Or install via cargo ([crates.io/crates/hushcrumbs](https://crates.io/crates/hushcrumbs)):
+
+```
+cargo install hushcrumbs
+```
+
+
+## Usage
+
+```
+$ hushcrumbs
+
+Usage: hushcrumbs [OPTIONS] [COMMAND]
+
+Commands:
+  init     Creates a new backup directory
+  deinit   Restores all original files and unconfigures the backup directory
+  add      Adds a file to the backup and creates a symlink
+  restore  Restores backup files
+  rm       Removes a file from the backup [aliases: remove]
+  ls       Lists backups or files in a backup [aliases: list]
+  commit   Commits a backup (placeholder)
+  push     Pushes a backup (placeholder)
+  help     Print this message or the help of the given subcommand(s)
+
+Options:
+  -c, --config <CONFIG_FILE>  Sets the path to the global config file. [default: /home/ryan/.config/hushcrumbs/config.ron]
+      --log <LEVEL>           Sets the log level, overriding the RUST_LOG environment variable. [possible values: trace, debug, info, warn, error]
+  -v                          Sets the log level to debug.
+      --no-confirm            Disables all interactive confirmation (careful!)
+  -h, --help                  Print help
+  -V, --version               Print version
+
+```
+
+### Initialize a new backup with a name and location
+
+```
+## hushcrumbs init <BACKUP_NAME> <PATH>
+## Example:
+hushcrumbs init test /tmp/test
+```
+
+This will create a new backup named `test` at the path `/tmp/test`.
+(The name of the backup and the name of directory are independent of
+each other.)
+
+### List all backups
+
+```
+hushcrumbs ls
+```
+
+This will print a list of the backups that have been initialized:
+
+```
+ Backup Name | Backup Path 
+-------------+-------------
+ test        | /tmp/test 
+```
+
+### Add files to the named backup
+
+```
+## hushcrumbs add <BACKUP_NAME> <PATH>
+## Example:
+touch /tmp/hello.txt
+hushcrumbs add test /tmp/hello.txt
+```
+
+The path `/tmp/hello.txt` is moved to the `/tmp/test` backup folder,
+and a new symlink is created which points to it at the original path
+`/tmp/hello.txt`.
+
+### List all files in the named backup
+
+```
+## hushcrumbs ls <BACKUP_NAME>
+## Example:
+hushcrumbs list test
+```
+
+This will list all of the files contained in the `test` backup:
+
+```
+ Local files contained in backup (test): 
+-----------------------------------------
+ /tmp/hello.txt 
+```
+
+### Remove a file from the backup
+
+```
+## hushcrumbs rm <BACKUP_NAME> <PATH>
+## Example:
+hushcrumbs rm test /tmp/hello.txt
+```
+
+This removes the symlink, and replaces the original file contents back
+in place at `/tmp/hello.txt`, then the file is removed from the
+backup.
+
+If the symlink has already been deleted, and you now wish to remove it
+from the backup without restoring it, use the `--delete` flag:
+
+```
+## To permanently delete the file AND the backup of it:
+## hushcrumbs rm <BACKUP_NAME> <PATH> --delete
+## Example:
+hushcrumbs rm test /tmp/hello.txt --delete
+```
+
+This is a destructive operation, so there is an interactive
+confirmation required to proceed. If you are doing this unattended,
+you may also add the `--no-confirm` option to disable the confirmation
+prompt.
+ 
 ## Development
 
 These instructions are specific to Fedora; minor adjustments for your
