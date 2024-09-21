@@ -20,14 +20,14 @@ jobs:
     - name: Prepare Cargo.lock for caching (ignore hushcrumbs version)
       run: |
         PROJECT_NAME=$(grep '^name' Cargo.toml | sed 's/name = "\(.*\)"/\1/')
-        awk '/\[\[package\]\]/{p=0} /name = "'"${PROJECT_NAME}"'"/{p=1} p && /version = /{next} 1' Cargo.lock > Cargo.lock.no-version
+        awk '/\[\[package\]\]/{p=0} /name = "'"${PROJECT_NAME}"'"/{p=1} p && /version = /{next} 1' Cargo.lock > /tmp/Cargo.lock.no-version
 
     # Cache cargo registry (source code artifacts only):
     - name: Cache cargo registry
       uses: actions/cache@v3
       with:
         path: ~/.cargo/registry
-        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock.no-version') }}
+        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('/tmp/Cargo.lock.no-version') }}
         restore-keys: |
           ${{ runner.os }}-cargo-registry-
 
@@ -36,7 +36,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: target
-        key: ${{ runner.os }}-cargo-deps-${{ hashFiles('**/Cargo.lock.no-version') }}
+        key: ${{ runner.os }}-cargo-deps-${{ hashFiles('/tmp/Cargo.lock.no-version') }}
         restore-keys: |
           ${{ runner.os }}-cargo-deps-
 
