@@ -30,33 +30,13 @@ jobs:
         key: ${{ runner.os }}-cargo-registry-${{ hashFiles('/tmp/Cargo.lock.no-version') }}
         restore-keys: |
           ${{ runner.os }}-cargo-registry-
-
-    # Restore target cache
-    - name: Restore third-party dependencies cache
-      uses: actions/cache@v3
-      with:
-        path: target
-        key: ${{ runner.os }}-cargo-deps-${{ hashFiles('/tmp/Cargo.lock.no-version') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-deps-
-
       
     # Verify if the crate is ready to be published:
     - name: Check crate is ready for publishing
       run: cargo package
+      
     # Publish the crate to crates.io
     - name: Publish to crates.io
       env:
         CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
       run: cargo publish --token $CARGO_REGISTRY_TOKEN
-
-    # Remove project-specific artifacts from target, to not invalidate the cache:
-    - name: Remove project-specific artifacts
-      run: |
-        PROJECT_NAME=$(grep '^name' Cargo.toml | sed 's/name = "\(.*\)"/\1/')
-        find target/ | grep "${PROJECT_NAME}" | xargs -iXX rm -rf XX
-
-    # Remove package target, to not invalidate the cache:
-    - name: Remove project-specific artifacts
-      run: |
-        rm -rf target/package/
