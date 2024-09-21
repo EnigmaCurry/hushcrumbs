@@ -60,6 +60,16 @@ jobs:
       #   with:
       #     name: ${{ matrix.platform.bin }}-v${{ steps.cargo_version.outputs.value }}-${{ matrix.platform.name }}.tar.gz.sha256
       #     path: ${{ matrix.platform.bin }}-v${{ steps.cargo_version.outputs.value }}-${{ matrix.platform.name }}.tar.gz.sha256
+      - name: Add git-cliff credentials
+        run: echo -e "\n[remote.github]\nowner = \"EnigmaCurry\"\nrepo = \"dry_console\"\ntoken = \"${GITHUB_TOKEN}\"" >> cliff.toml
+      - name: Update CHANGELOG
+        run: git-cliff -o CHANGELOG.md
+      - name: Upload CHANGELOG.md
+        uses: actions/upload-artifact@v4
+        with:
+          name: CHANGELOG.md
+          path: CHANGELOG.md
+
     strategy:
       matrix:
         platform:
