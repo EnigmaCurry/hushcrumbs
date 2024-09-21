@@ -3,6 +3,7 @@ set export
 current_dir := `pwd`
 RUST_LOG := "debug"
 RUST_BACKTRACE := "1"
+GIT_REMOTE := "origin"
 
 deps:
     @echo
