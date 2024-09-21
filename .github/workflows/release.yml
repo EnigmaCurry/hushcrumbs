@@ -17,16 +17,6 @@ jobs:
         with:
           save-if: ${{ github.ref == 'refs/heads/master' }}
           shared-key: rust-release
-          
-      # Install dependencies:
-      - name: Install cargo-binstall
-        run: curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
-      # Install Just using cargo-binstall
-      - name: Install Just
-        run: cargo binstall --no-confirm just
-      - name: Install other dependencies listed in Justfile (bin-deps)
-        run: just bin-deps
-
       - name: Get version from cargo.toml
         uses: SebRollen/toml-action@v1.2.0
         id: cargo_version
@@ -70,8 +60,6 @@ jobs:
       #   with:
       #     name: ${{ matrix.platform.bin }}-v${{ steps.cargo_version.outputs.value }}-${{ matrix.platform.name }}.tar.gz.sha256
       #     path: ${{ matrix.platform.bin }}-v${{ steps.cargo_version.outputs.value }}-${{ matrix.platform.name }}.tar.gz.sha256
-      - name: Add git-cliff credentials
-        run: echo -e "\n[remote.github]\nowner = \"EnigmaCurry\"\nrepo = \"dry_console\"\ntoken = \"${GITHUB_TOKEN}\"" >> cliff.toml
 
     strategy:
       matrix:
