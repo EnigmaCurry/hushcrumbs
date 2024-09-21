@@ -1,5 +1,8 @@
 # Hushcrumbs
 
+[![Crates.io](https://img.shields.io/crates/v/hushcrumbs.svg)](https://crates.io/crates/hushcrumbs)
+[![docs.rs](https://docs.rs/hushcrumbs/badge.svg)](https://docs.rs/hushcrumbs)
+
 Hushcrumbs is another secrets manager. Its job is to centrally store
 files that are linked throughout your filesystem. It can ingest any
 file from any path, moving the file to a central repository, and
