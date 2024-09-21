@@ -37,7 +37,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## Install
 
-[Download the latest release for your platform.](https://github.com/EnigmaCurry/dry_console/releases)
+[Download the latest release for your platform.](https://github.com/EnigmaCurry/hushcrumbs/releases)
 
 Or install via cargo ([crates.io/crates/hushcrumbs](https://crates.io/crates/hushcrumbs)):
 
