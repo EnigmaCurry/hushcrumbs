@@ -20,6 +20,7 @@ impl TestBed {
     fn get_binary(working_dir: &TempDir) -> Command {
         let mut binary = Command::cargo_bin(env!("CARGO_PKG_NAME")).expect("Binary not found");
         binary.current_dir(working_dir.path());
+        binary.arg("-c config.ron");
         binary
     }
     pub fn new() -> Self {

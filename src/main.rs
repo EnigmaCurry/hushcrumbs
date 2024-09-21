@@ -1,19 +1,19 @@
-use add::add_to_backup;
 use clap::{Arg, Command};
 use confirm::{confirm, ConfirmProps};
-use init::{deinit_backup, init_backup};
-use list::{list_backup_files, list_backups};
 use once_cell::sync::OnceCell;
-use restore::{remove_from_backup, restore_backup};
 use std::{path::PathBuf, str::FromStr};
-mod add;
+use subcommand::{
+    add::add_to_backup,
+    init::{deinit_backup, init_backup},
+    list::{list_backup_files, list_backups},
+    restore::{remove_from_backup, restore_backup},
+};
 mod config;
 mod confirm;
-mod init;
-mod list;
 mod paths;
 mod prelude;
-mod restore;
+
+mod subcommand;
 
 #[macro_use]
 extern crate prettytable;
@@ -45,7 +45,7 @@ fn main() {
                 .global(true)
                 .num_args(1)
                 .value_name("CONFIG_FILE")
-                .help("Sets the path to the global config file")
+                .help("Sets the path to the global config file.")
                 .default_value(config::get_default_config_path()),
         )
         .arg(
@@ -55,13 +55,13 @@ fn main() {
                 .num_args(1)
                 .value_name("LEVEL")
                 .value_parser(["trace", "debug", "info", "warn", "error"])
-                .help("Sets the log level, overriding the RUST_LOG environment variable"),
+                .help("Sets the log level, overriding the RUST_LOG environment variable."),
         )
         .arg(
             Arg::new("verbose")
                 .short('v')
                 .global(true)
-                .help("Sets the log level to debug")
+                .help("Sets the log level to debug.")
                 .action(clap::ArgAction::SetTrue),
         )
         .arg(
@@ -106,7 +106,7 @@ fn main() {
                         .long("delete")
                         .action(clap::ArgAction::SetTrue)
                         .help(
-                            "If set, the file will be deleted from the backup without restoring it",
+                            "Delete the file AND the backup, without restoring it (requires confirmation unless also --no-confirm)",
                         ),
                 ),
         )
@@ -114,7 +114,13 @@ fn main() {
             Command::new("ls")
                 .visible_alias("list")
                 .about("Lists backups or files in a backup")
-                .arg(Arg::new("BACKUP_NAME").required(false)),
+                .arg(Arg::new("BACKUP_NAME").required(false))
+                .arg(
+                    Arg::new("json")
+                        .long("json")
+                        .action(clap::ArgAction::SetTrue)
+                        .help("Output JSON instead of pretty tables."),
+                ),
         )
         .subcommand(
             Command::new("commit")

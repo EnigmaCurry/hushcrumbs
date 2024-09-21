@@ -1,11 +1,19 @@
-# secrets
+# hushcrumbs
 
-This is another secrets manager. Its job is to manage disperse files
-anywhere in your filesystem, moving them into a central repostiory,
-and replacing the originals with symlinks. This tool is capable of
-performing encrypted backups to a git repository (via
-[git-crypt](https://github.com/AGWA/git-crypt)), and facilitate future
-restoration.
+Hushcrumbs is another secrets manager. Its job is to manage disperse
+files anywhere in your filesystem, moving them into a central
+repository, and replacing the original files with symlinks to the
+central location. This lets you colocate symlinks to your secrets (eg.
+`.env` files) amongst your project directories, wherever they might
+live.
+
+**This tool does not perform any encryption at rest** (Nb. you must
+completely trust your own filesystem permissions: any process on your
+system, assuming it has appropriate permission, can read the secrets
+file in plain text!), however, this tool does have the ability to
+produce encrypted backups, and can also facilitate future restoration
+from such an encrypted backup, and makes it easy to wipe all secrets
+en masse, because they are all stored in a central directory.
 
 ## STATUS: EXPERIMENTAL
 
