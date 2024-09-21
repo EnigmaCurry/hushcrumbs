@@ -9,7 +9,8 @@ deps:
     @echo
     @echo "Installing dependencies:"
     @echo
-    cargo install cargo-nextest
+    cargo install --locked cargo-nextest
+    cargo install --locked git-cliff
     @echo
     @echo "All dependencies have been installed."
     @echo
@@ -19,6 +20,7 @@ deps:
 
 bin-deps:
     cargo binstall --no-confirm cargo-nextest
+    cargo binstall --no-confirm git-cliff
 
 [no-cd]
 run *args:
