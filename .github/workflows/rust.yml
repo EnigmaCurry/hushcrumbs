@@ -40,7 +40,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: target
-        key: ${{ runner.os }}-cargo-deps-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-cargo-deps-${{ hashFiles('**/Cargo.lock.no-version') }}
         restore-keys: |
           ${{ runner.os }}-cargo-deps-
 

@@ -12,23 +12,43 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Update Rust stable
         run: rustup toolchain install stable
+      # Preprocess Cargo.lock to ignore version fields for cache id hashing purposes:
+
+      - name: Prepare Cargo.lock for caching (ignore hushcrumbs version)
+        run: |
+          PROJECT_NAME=$(grep '^name' Cargo.toml | sed 's/name = "\(.*\)"/\1/')
+          awk '/\[\[package\]\]/{p=0} /name = "'"${PROJECT_NAME}"'"/{p=1} p && /version = /{next} 1' Cargo.lock > Cargo.lock.no-version
+      # Cache cargo registry (source code artifacts only):
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock.no-version') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
       - name: Get version from cargo.toml
         uses: SebRollen/toml-action@v1.2.0
         id: cargo_version
         with:
           file: 'Cargo.toml'
           field: 'package.version'
+
       - name: Get the tag of current release
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> ${GITHUB_OUTPUT}
+
       - name: Verify package version is equal to tag version
         if: ${{ steps.cargo_version.outputs.value != steps.get_version.outputs.VERSION }}
         run: |
           echo "${{ steps.cargo_version.outputs.value }}"
           echo "${{ steps.get_version.outputs.VERSION }}"
           exit 1
+
       - name: Build binary
         uses: houseabsolute/actions-rust-cross@v0
         with:
@@ -37,8 +57,10 @@ jobs:
           target: ${{ matrix.platform.target }}
           args: "--bin ${{ matrix.platform.bin }} --locked --release"
           strip: true
+
       - name: move binary path
         run: mv target/${{ matrix.platform.target }}/release/${{ matrix.platform.bin }} .
+
       - name: Package as archive
         shell: bash
         run: |
@@ -47,11 +69,13 @@ jobs:
         if: startsWith( github.ref, 'refs/tags/v' )
       # - name: Generate SHA-256
       #   run: shasum -a 256 ${{ matrix.platform.bin }}-v${{ steps.cargo_version.outputs.value }}-${{ matrix.platform.name }}.tar.gz > ${{ matrix.platform.bin }}-v${{ steps.cargo_version.outputs.value }}-${{ matrix.platform.name }}.tar.gz.sha256
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform.bin }}-v${{ steps.cargo_version.outputs.value }}-${{ matrix.platform.name }}.tar.gz
           path: ${{ matrix.platform.bin }}-v${{ steps.cargo_version.outputs.value }}-${{ matrix.platform.name }}.tar.gz
+
       # - name: Upload digests
       #   uses: actions/upload-artifact@v4
       #   with:
@@ -103,7 +127,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+
     - uses: actions/download-artifact@v4
+
     # Release to github:
     - name: Release
       uses: softprops/action-gh-release@v2
