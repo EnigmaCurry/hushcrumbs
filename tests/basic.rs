@@ -18,7 +18,7 @@ fn test_init() {
 fn test_file_add() {
     let context = TestBed::new();
     context.run("init test t").assert().success();
-    context.shell("touch hello.txt").assert().success();
+    context.shell("touch howdy.txt").assert().success();
     context.shell("ls").assert().success();
-    context.run("add test hello.txt").assert().success();
+    context.run("add test howdy.txt").assert().success();
 }
