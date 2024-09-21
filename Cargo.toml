@@ -3,6 +3,13 @@ name = "hushcrumbs"
 description = "Hushcrumbs is another secrets manager."
 version = "0.1.0"
 edition = "2021"
+repository = "https://github.com/EnigmaCurry/hushcrumbs"
+homepage = "https://github.com/EnigmaCurry/hushcrumbs"
+license = "MIT"
+keywords = ["secrets", "dotenv"]
+categories = ["command-line-utilities"]
+readme = "README.md"
+documentation = "https://docs.rs/hushcrumbs"
 
 [dependencies]
 assert_cmd = "2.0.16"
