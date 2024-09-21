@@ -1,19 +1,24 @@
 # Hushcrumbs
 
 Hushcrumbs is another secrets manager. Its job is to manage disperse
-files anywhere in your filesystem, moving them into a central
-repository, and replacing the original files with symlinks to the
-central location. This lets you colocate symlinks to your secrets (eg.
-`.env` files) amongst your project directories, wherever they might
-live.
+files, living anywhere in your filesystem, and moving those files into
+a central repository. It then replaces the original files with
+symlinks to the central location. This lets you colocate the symlinks
+(eg. `.env` files) amongst your various project directories, wherever
+they might live. One major benefit of storing all of your secrets in a
+centralized directory, is that it makes it trivial to wipe them all,
+en masse. Additionally, `git` will never commit the contents of any
+symlink, but can still track its location (by relative or absolute
+path).
 
 **This tool does not perform any encryption at rest** (Nb. you must
-completely trust your own filesystem permissions: any process on your
-system, assuming it has appropriate permission, can read the secrets
-file in plain text!), however, this tool does have the ability to
-produce encrypted backups, and can also facilitate future restoration
-from such an encrypted backup, and makes it easy to wipe all secrets
-en masse, because they are all stored in a central directory.
+completely trust your own system, as the secrets are always
+unencryped: any process on your system, assuming it has appropriate
+permission, can read the secrets file in plain text!), however, this
+tool does (or will) have the ability to produce encrypted backups
+which you may want to store offsite, and this tool will also
+facilitate future restoration of those original files, from such an
+encrypted backup. 
 
 ## STATUS: EXPERIMENTAL
 
