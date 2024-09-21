@@ -2,7 +2,6 @@ pub use assert_cmd::Command;
 #[allow(unused_imports)]
 pub use log::{debug, error, info, warn};
 pub use predicates::str::contains;
-use shell_words;
 use tempfile::TempDir;
 
 #[ctor::ctor]
@@ -32,13 +31,13 @@ impl TestBed {
         let binary = Self::get_binary(&temp_dir);
         Self { temp_dir, binary }
     }
-    pub fn run(self: &Self, args: &str) -> Command {
+    pub fn run(&self, args: &str) -> Command {
         let args = shell_words::split(args).expect("Bad args: {args:?}");
         let mut binary = Self::get_binary(&self.temp_dir);
         binary.args(args);
         binary
     }
-    pub fn shell(self: &Self, cmd: &str) -> Command {
+    pub fn shell(&self, cmd: &str) -> Command {
         let parts = shell_words::split(cmd).expect("Failed to parse command: {cmd}");
         assert!(!parts.is_empty(), "Shell command is blank");
         let mut cmd = Command::new(&parts[0]);
@@ -48,7 +47,7 @@ impl TestBed {
         }
         cmd
     }
-    pub fn get_working_dir(self: &Self) -> &str {
+    pub fn get_working_dir(&self) -> &str {
         self.temp_dir
             .path()
             .to_str()

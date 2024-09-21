@@ -23,6 +23,9 @@ run *args:
 build:
     cargo build
 
+build-watch:
+    cargo watch -s "clear && cargo build"
+
 test *args:
     cargo nextest run --release -- {{args}}
 

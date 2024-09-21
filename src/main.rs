@@ -3,9 +3,13 @@ use clap::{Arg, ArgMatches, Command};
 use confirm::{confirm, ConfirmProps};
 use init::{deinit_backup, init_backup};
 use list::{list_backup_files, list_backups};
-use once_cell::sync::Lazy;
+use once_cell::sync::OnceCell;
 use restore::{remove_from_backup, restore_backup};
-use std::{path::PathBuf, str::FromStr, sync::Mutex};
+use std::{
+    path::{Path, PathBuf},
+    str::FromStr,
+    sync::Mutex,
+};
 mod add;
 mod config;
 mod confirm;
@@ -21,9 +25,16 @@ extern crate prettytable;
 use prelude::*;
 
 /// Options is a subset of the command line options that need to be shared globally:
-struct Options {
+/// (cloning the entire ArgMatches object did not behave well, so this is its proxy:)
+#[derive(Default, Debug)]
+pub struct Options {
     config_file: PathBuf,
     no_confirm: bool,
+}
+/// Globally shared Options instance:
+static OPTIONS: OnceCell<Options> = OnceCell::new();
+pub fn get_options() -> &'static Options {
+    OPTIONS.get().expect("Options has not been set.")
 }
 
 fn main() {
@@ -127,6 +138,14 @@ fn main() {
                 .arg(Arg::new("BACKUP_NAME").required(true)),
         );
     let matches = cmd.get_matches();
+
+    // Set global options for sharing a subset of the args with other modules:
+    OPTIONS
+        .set(Options {
+            config_file: PathBuf::from(matches.get_one::<String>("config").expect("no config arg")),
+            no_confirm: matches.get_flag("no-confirm"),
+        })
+        .expect("Options can only be set once");
 
     // Configure logging:
     let log_level = if matches.get_flag("verbose") {

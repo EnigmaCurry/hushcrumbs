@@ -1,7 +1,7 @@
 #[allow(unused_imports)]
 use crate::prelude::*;
 
-use crate::GLOBAL_CMD_MATCHES;
+use crate::get_options;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
@@ -14,12 +14,13 @@ pub struct Config {
 }
 
 pub fn load_config() -> io::Result<Config> {
-    let config_path = get_config_path();
-
+    // Config path is specified by command line argument:
+    let config_path: PathBuf = get_options().config_file.clone();
+    // If no config exists, return the default config:
     if !config_path.exists() {
-        return Ok(Config::default()); // Return an empty config if the file doesn't exist
+        return Ok(Config::default());
     }
-
+    // Load the config file:
     let file = File::open(&config_path)?;
     let config: Config = match ron::de::from_reader(file) {
         Ok(config) => config,
@@ -30,8 +31,5 @@ pub fn load_config() -> io::Result<Config> {
             ))
         }
     };
-
     Ok(config)
 }
-
-fn get_config_path() -> PathBuf {}
