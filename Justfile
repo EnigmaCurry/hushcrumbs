@@ -88,3 +88,6 @@ release:
     confirm yes "New tag will be \"v${CURRENT_VERSION}\"" " -- Proceed?"; \
     git tag "v${CURRENT_VERSION}"; \
     git push "${GIT_REMOTE}" tag "v${CURRENT_VERSION}";
+
+clean *args:
+    cargo clean {{args}}

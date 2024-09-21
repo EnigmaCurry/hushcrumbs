@@ -26,21 +26,14 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-cargo-registry-
 
-    # Restore third-party dependencies to deps-cache
+    # Restore third-party dependencies to target/release/deps
     - name: Restore third-party dependencies cache
       uses: actions/cache@v3
       with:
-        path: target/release/deps-cache
+        path: target/release/deps
         key: ${{ runner.os }}-cargo-deps-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-cargo-deps-
-
-    # Copy the third-party dependencies from deps-cache to the proper location:
-    - name: Restore third-party dependencies to target/release/deps
-      run: |
-        mkdir -p target/release/deps-cache
-        mkdir -p target/release/deps
-        rsync -av target/release/deps-cache/ target/release/deps/
 
     # Install cargo-binstall
     - name: Install cargo-binstall
@@ -56,20 +49,11 @@ jobs:
     - name: Build
       run: just build --release
 
-    # Cache third-party dependencies (filter out project-specific artifacts)
-    - name: Filter and cache third-party dependencies
-      run: |
-        PROJECT_NAME=$(grep '^name' Cargo.toml | sed 's/name = "\(.*\)"/\1/')
-        mkdir -p target/release/deps-cache
-        rsync -av --exclude="*${PROJECT_NAME}*" target/release/deps/ target/release/deps-cache/
-        
-    - name: Cache filtered dependencies
-      uses: actions/cache@v3
-      with:
-        path: target/release/deps-cache
-        key: ${{ runner.os }}-cargo-deps-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-deps-
-
     - name: Run tests
       run: just test --release
+      
+    # Remove project-specific artifacts from target, to not invalidate the cache:
+    - name: Remove project-specific artifacts
+      run: |
+        PROJECT_NAME=$(grep '^name' Cargo.toml | sed 's/name = "\(.*\)"/\1/')
+        find target/ | grep "${PROJECT_NAME}" | xargs -iXX rm -rf XX
