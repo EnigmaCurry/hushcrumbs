@@ -1,24 +1,24 @@
 # Hushcrumbs
 
-Hushcrumbs is another secrets manager. Its job is to manage disperse
-files, living anywhere in your filesystem, and moving those files into
-a central repository. It then replaces the original files with
-symlinks to the central location. This lets you colocate the symlinks
-(eg. `.env` files) amongst your various project directories, wherever
-they might live. One major benefit of storing all of your secrets in a
-centralized directory, is that it makes it trivial to wipe them all,
-en masse. Additionally, `git` will never commit the contents of any
-symlink, but can still track its location (by relative or absolute
-path).
+Hushcrumbs is another secrets manager. Its job is to centrally store
+files that are linked throughout your filesystem. It can ingest any
+file from any path, moving the file to a central repository, and
+creating a symlink in its original path. This lets you colocate the
+symlinks (eg. `.env` files) amongst your various project directories,
+no matter where they might live. One major benefit of storing all of
+your secrets in a centralized directory, is that it makes it trivial
+to wipe all of them, en masse. Additionally, `git` will never commit
+the contents of any symlink, but it can still track its location (by
+relative or absolute path).
 
-**This tool does not perform any encryption at rest** (Nb. you must
+**Hushcrumbs does not perform any encryption at rest** (Nb. you must
 completely trust your own system, as the secrets are always
-unencryped: any process on your system, assuming it has appropriate
-permission, can read the secrets file in plain text!), however, this
-tool does (or will) have the ability to produce encrypted backups
+unencryped; any process on your system can read the secrets file in
+plain text, assuming it has filesystem permission to do so!), however,
+this tool does (or will) have the ability to produce encrypted backups
 which you may want to store offsite, and this tool will also
 facilitate future restoration of those original files, from such an
-encrypted backup. 
+encrypted backup.
 
 ## STATUS: EXPERIMENTAL
 
