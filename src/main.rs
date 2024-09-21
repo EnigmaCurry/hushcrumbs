@@ -34,10 +34,10 @@ pub fn get_options() -> &'static Options {
 }
 
 fn main() {
-    let mut cmd = Command::new("secrets")
-        .version("1.0")
-        .author("Author Name <email@example.com>")
-        .about("A CLI backup tool")
+    let mut cmd = Command::new(env!("CARGO_BIN_NAME"))
+        .version(env!("CARGO_PKG_VERSION"))
+        .author(env!("CARGO_PKG_AUTHORS"))
+        .about(env!("CARGO_PKG_DESCRIPTION"))
         .arg(
             Arg::new("config")
                 .long("config")

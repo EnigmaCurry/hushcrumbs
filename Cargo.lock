@@ -425,6 +425,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9a3a5bfb195931eeb336b2a7b4d761daec841b97f947d34394601737a7bba5e4"
 
 [[package]]
+name = "hushcrumbs"
+version = "0.1.0"
+dependencies = [
+ "assert_cmd",
+ "base64 0.22.1",
+ "clap",
+ "ctor",
+ "dirs",
+ "env_logger",
+ "inquire",
+ "log",
+ "once_cell",
+ "predicates",
+ "prettytable",
+ "rand",
+ "ron",
+ "serde",
+ "sha2",
+ "shell-words",
+ "tempfile",
+]
+
+[[package]]
 name = "inquire"
 version = "0.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -777,29 +800,6 @@ name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
-
-[[package]]
-name = "secrets"
-version = "0.1.0"
-dependencies = [
- "assert_cmd",
- "base64 0.22.1",
- "clap",
- "ctor",
- "dirs",
- "env_logger",
- "inquire",
- "log",
- "once_cell",
- "predicates",
- "prettytable",
- "rand",
- "ron",
- "serde",
- "sha2",
- "shell-words",
- "tempfile",
-]
 
 [[package]]
 name = "serde"

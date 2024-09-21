@@ -1,18 +1,18 @@
-# hushcrumbs
+# Hushcrumbs
 
-Hushcrumbs is another secrets manager. Its job is to manage disperse
+Hushcrumbs is another hushcrumbs manager. Its job is to manage disperse
 files anywhere in your filesystem, moving them into a central
 repository, and replacing the original files with symlinks to the
-central location. This lets you colocate symlinks to your secrets (eg.
+central location. This lets you colocate symlinks to your hushcrumbs (eg.
 `.env` files) amongst your project directories, wherever they might
 live.
 
 **This tool does not perform any encryption at rest** (Nb. you must
 completely trust your own filesystem permissions: any process on your
-system, assuming it has appropriate permission, can read the secrets
+system, assuming it has appropriate permission, can read the hushcrumbs
 file in plain text!), however, this tool does have the ability to
 produce encrypted backups, and can also facilitate future restoration
-from such an encrypted backup, and makes it easy to wipe all secrets
+from such an encrypted backup, and makes it easy to wipe all hushcrumbs
 en masse, because they are all stored in a central directory.
 
 ## STATUS: EXPERIMENTAL
@@ -49,9 +49,9 @@ rustup-init ## just press enter when prompted for default selection
 ### Clone source repository
 
 ```
-git clone git@github.com:EnigmaCurry/secrets.git \
-  ~/git/vendor/enigmacurry/secrets
-cd ~/git/vendor/enigmacurry/secrets
+git clone git@github.com:EnigmaCurry/hushcrumbs.git \
+  ~/git/vendor/enigmacurry/hushcrumbs
+cd ~/git/vendor/enigmacurry/hushcrumbs
 ```
 
 ### Install development dependencies
@@ -72,10 +72,10 @@ just run [ARGS ...]
 
 ```
 ## Add this to ~/.bashrc or equivalent:
-alias secrets='just -f ~/git/vendor/enigmacurry/secrets/Justfile run'
+alias hushcrumbs='just -f ~/git/vendor/enigmacurry/hushcrumbs/Justfile run'
 ```
 
-Now you can run `secrets` from any directory, with any arguments, and it
+Now you can run `hushcrumbs` from any directory, with any arguments, and it
 will automatically rebuild from source and run it.
 
 ## Testing
