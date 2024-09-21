@@ -11,13 +11,19 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Install stable rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        components: rustfmt, clippy
 
-    # Cache cargo registry and build artifacts
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Cache cargo registry (source code artifacts only):
     - name: Cache cargo registry
       uses: actions/cache@v3
       with:
@@ -26,13 +32,21 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-cargo-registry-
 
-    - name: Cache cargo build
+    # Restore third-party dependencies to deps-cache
+    - name: Restore third-party dependencies cache
       uses: actions/cache@v3
       with:
-        path: target
-        key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+        path: target/release/deps-cache
+        key: ${{ runner.os }}-cargo-deps-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
-          ${{ runner.os }}-cargo-build-
+          ${{ runner.os }}-cargo-deps-
+
+    # Copy the third-party dependencies from deps-cache to the proper location:
+    - name: Restore third-party dependencies to target/release/deps
+      run: |
+        mkdir -p target/release/deps-cache
+        mkdir -p target/release/deps
+        rsync -av target/release/deps-cache/ target/release/deps/
 
     # Install cargo-binstall
     - name: Install cargo-binstall
@@ -48,5 +62,20 @@ jobs:
     - name: Build
       run: just build --release
 
-    - name: Tests
+    # Cache third-party dependencies (filter out project-specific artifacts)
+    - name: Filter and cache third-party dependencies
+      run: |
+        PROJECT_NAME=$(grep '^name' Cargo.toml | sed 's/name = "\(.*\)"/\1/')
+        mkdir -p target/release/deps-cache
+        rsync -av --exclude="*${PROJECT_NAME}*" target/release/deps/ target/release/deps-cache/
+        
+    - name: Cache filtered dependencies
+      uses: actions/cache@v3
+      with:
+        path: target/release/deps-cache
+        key: ${{ runner.os }}-cargo-deps-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-deps-
+
+    - name: Run tests
       run: just test --release
