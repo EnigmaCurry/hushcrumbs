@@ -26,11 +26,11 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-cargo-registry-
 
-    # Restore third-party dependencies to target/release/deps
+    # Restore target cache
     - name: Restore third-party dependencies cache
       uses: actions/cache@v3
       with:
-        path: target/release/deps
+        path: target
         key: ${{ runner.os }}-cargo-deps-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-cargo-deps-
