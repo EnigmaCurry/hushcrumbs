@@ -73,7 +73,7 @@ just run help
 just run [ARGS ...]
 ```
 
-### Build release
+### Build release binary
 
 ```
 just build --release
@@ -117,3 +117,39 @@ just test-watch
 just clippy
 just clippy --fix
 ```
+
+### Release (Github actions)
+
+#### Bump release version and push new branch
+
+The `bump-version` target will automatically update the version number
+in Cargo.toml, Cargo.lock, and README.md as suggested by git-cliff.
+This creates a new branch named `release-{VERSION}`, and automatically
+checks it out. You just need to `git push` the branch:
+
+```
+just bump-version
+# ... automatically checks out a new branch named release-{VERSION}
+
+git push
+```
+
+#### Make a new PR with the changeset
+
+Branch protection is enabled, all changesets must come in the form of
+a Pull Request. On GitHub, create a new Pull Request for the
+`release-{VERSION}` branch into the master branch.
+
+#### Merge the PR and tag the release
+
+Once the PR is merged, update your local repo, and run the release
+target:
+
+```
+git checkout master
+git pull
+just release
+```
+
+New binaries will be automatically built by github actions, and a new
+packaged release will be posted.
