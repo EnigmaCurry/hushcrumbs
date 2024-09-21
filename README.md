@@ -73,6 +73,12 @@ just run help
 just run [ARGS ...]
 ```
 
+### Build release
+
+```
+just build --release
+```
+
 ### Create development alias
 
 ```
@@ -83,7 +89,7 @@ alias h=hushcrumbs
 
 Now you can run `hushcrumbs`, or simply `h`, from any directory, with
 any arguments, and it will automatically rebuild from source, and then
-run it.
+run it with those args.
 
 ## Testing
 
@@ -105,3 +111,9 @@ just test-verbose test_cli_help
 just test-watch
 ```
 
+### Clippy
+
+```
+just clippy
+just clippy --fix
+```

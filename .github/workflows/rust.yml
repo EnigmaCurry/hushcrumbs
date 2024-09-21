@@ -16,7 +16,37 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
+    # Cache cargo registry and build artifacts
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: ~/.cargo/registry
+        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-registry-
+
+    - name: Cache cargo build
+      uses: actions/cache@v3
+      with:
+        path: target
+        key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-build-
+
+    # Install cargo-binstall
+    - name: Install cargo-binstall
+      run: cargo install cargo-binstall
+
+    # Install Just using cargo-binstall
+    - name: Install Just
+      run: cargo binstall just
+
+    - name: Install other dependencies listed in Justfile (deps)
+      run: just deps
+
     - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+      run: just build 
+
+    - name: Tests
+      run: just test

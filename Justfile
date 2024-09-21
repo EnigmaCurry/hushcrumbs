@@ -20,11 +20,11 @@ deps:
 run *args:
     cargo run --manifest-path "${current_dir}/Cargo.toml" -- {{args}}
 
-build:
-    cargo build
+build *args:
+    cargo build {{args}}
 
-build-watch:
-    cargo watch -s "clear && cargo build"
+build-watch *args:
+    cargo watch -s "clear && cargo build {{args}}"
 
 test *args:
     cargo nextest run --release -- {{args}}
@@ -38,10 +38,6 @@ test-verbose *args:
 test-watch-verbose *args:
     RUST_TEST_THREADS=1 cargo watch -s "clear && cargo nextest run --nocapture --release -- {{args}}"
     
+clippy *args:
+    RUSTFLAGS="-D warnings" cargo clippy {{args}} --color=always 2>&1 --tests | less -R
 
-clippy:
-    RUSTFLAGS="-D warnings" cargo clippy --color=always 2>&1 --tests | less -R
-
-clippy-fix:
-    RUSTFLAGS="-D warnings" cargo clippy --fix --color=always 2>&1 --tests | less -R
-    
