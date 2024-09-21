@@ -36,7 +36,7 @@ jobs:
 
     # Install cargo-binstall
     - name: Install cargo-binstall
-      run: cargo install cargo-binstall
+      run: curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
 
     # Install Just using cargo-binstall
     - name: Install Just
