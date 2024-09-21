@@ -40,7 +40,7 @@ jobs:
 
     # Install Just using cargo-binstall
     - name: Install Just
-      run: cargo binstall just
+      run: cargo binstall --no-confirm just
 
     - name: Install other dependencies listed in Justfile (deps)
       run: just deps
