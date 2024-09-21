@@ -22,7 +22,7 @@ jobs:
         id: cargo_version
         with:
           file: 'Cargo.toml'
-          field: 'workspace.package.version'
+          field: 'package.version'
       - name: Get the tag of current release
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> ${GITHUB_OUTPUT}
