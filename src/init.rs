@@ -1,18 +1,12 @@
-use crate::config::load_config;
+use crate::config::{load_config, save_config};
+use crate::get_options;
 use crate::paths::get_backup_paths;
 #[allow(unused_imports)]
 use crate::prelude::*;
 
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fs;
 use std::io::{self};
-use std::path::Path;
-
-#[derive(Serialize, Deserialize, Default)]
-struct Config {
-    backups: HashMap<String, String>, // Backup name -> path
-}
+use std::path::{Path, PathBuf};
 
 pub fn init_backup(backup_name: &str, path: Option<&str>) -> io::Result<()> {
     debug!("init backup: {:?}", &backup_name);
@@ -40,8 +34,10 @@ pub fn init_backup(backup_name: &str, path: Option<&str>) -> io::Result<()> {
 }
 
 pub fn update_config(backup_name: &str, path: &Path) -> io::Result<()> {
-    let config_dir = dirs::config_dir().unwrap().join("secrets");
-    let config_path = config_dir.join("config.ron");
+    let config_path: PathBuf = get_options().config_file.clone();
+    let config_dir = config_path
+        .parent()
+        .expect("Could not discover config file parent directory");
 
     // Ensure the parent directory exists
     if !config_dir.exists() {
@@ -56,16 +52,11 @@ pub fn update_config(backup_name: &str, path: &Path) -> io::Result<()> {
         .backups
         .insert(backup_name.to_string(), path.to_str().unwrap().to_string());
 
-    // Write the updated config to the file
-    let mut file = fs::File::create(config_path)?;
-    write!(file, "{}", ron::ser::to_string(&config).unwrap())?;
-    Ok(())
+    // Save the updated config using the common save_config method
+    save_config(&config)
 }
 
 pub fn deinit_backup(backup_name: &str) -> io::Result<()> {
-    // Get the path to the config file
-    let config_path = dirs::config_dir().unwrap().join("secrets/config.ron");
-
     // Load the existing config
     let mut config = load_config()?;
     let mut remove = || {
@@ -76,24 +67,17 @@ pub fn deinit_backup(backup_name: &str) -> io::Result<()> {
                 format!("Backup not found: {backup_name}"),
             ));
         }
-        // Save the updated config back to the file
-        let mut file = fs::OpenOptions::new()
-            .write(true)
-            .truncate(true)
-            .open(&config_path)?;
-        let serialized = ron::ser::to_string(&config).map_err(|e| {
-            io::Error::new(
-                io::ErrorKind::InvalidData,
-                format!("Failed to serialize config: {}", e),
-            )
-        })?;
-        file.write_all(serialized.as_bytes())?;
+
+        // Save the updated config back to the file using the common save_config method
+        save_config(&config)?;
+
         println!(
             "Backup '{}' has been removed from the configuration.",
             backup_name
         );
         Ok(())
     };
+
     match get_backup_paths(backup_name) {
         Ok(paths) => {
             if !paths.files.is_empty() {

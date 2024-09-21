@@ -1,15 +1,11 @@
 use add::add_to_backup;
-use clap::{Arg, ArgMatches, Command};
+use clap::{Arg, Command};
 use confirm::{confirm, ConfirmProps};
 use init::{deinit_backup, init_backup};
 use list::{list_backup_files, list_backups};
 use once_cell::sync::OnceCell;
 use restore::{remove_from_backup, restore_backup};
-use std::{
-    path::{Path, PathBuf},
-    str::FromStr,
-    sync::Mutex,
-};
+use std::{path::PathBuf, str::FromStr};
 mod add;
 mod config;
 mod confirm;
@@ -38,7 +34,7 @@ pub fn get_options() -> &'static Options {
 }
 
 fn main() {
-    let cmd = Command::new("secrets")
+    let mut cmd = Command::new("secrets")
         .version("1.0")
         .author("Author Name <email@example.com>")
         .about("A CLI backup tool")
@@ -50,14 +46,7 @@ fn main() {
                 .num_args(1)
                 .value_name("CONFIG_FILE")
                 .help("Sets the path to the global config file")
-                .default_value(
-                    dirs::config_dir()
-                        .expect("Could not find user config directory")
-                        .join(env!("CARGO_PKG_NAME"))
-                        .join("config.ron")
-                        .to_str()
-                        .expect("Could not make string for user config directory"),
-                ),
+                .default_value(config::get_default_config_path()),
         )
         .arg(
             Arg::new("log")
@@ -137,7 +126,7 @@ fn main() {
                 .about("Pushes a backup (placeholder)")
                 .arg(Arg::new("BACKUP_NAME").required(true)),
         );
-    let matches = cmd.get_matches();
+    let matches = cmd.clone().get_matches();
 
     // Set global options for sharing a subset of the args with other modules:
     OPTIONS
@@ -165,7 +154,6 @@ fn main() {
 
     // Print help if no subcommand is given:
     if matches.subcommand_name().is_none() {
-        let mut cmd = GLOBAL_CMD.lock().expect("Could not get GLOBAL_CMD");
         cmd.print_help().unwrap();
         println!();
         return;
