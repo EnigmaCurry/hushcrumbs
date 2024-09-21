@@ -55,3 +55,8 @@ jobs:
       run: |
         PROJECT_NAME=$(grep '^name' Cargo.toml | sed 's/name = "\(.*\)"/\1/')
         find target/ | grep "${PROJECT_NAME}" | xargs -iXX rm -rf XX
+
+    # Remove package target, to not invalidate the cache:
+    - name: Remove project-specific artifacts
+      run: |
+        rm -rf target/package/
