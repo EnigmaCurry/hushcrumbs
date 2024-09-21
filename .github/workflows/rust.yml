@@ -13,13 +13,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    steps:
-    - name: Install stable rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        components: rustfmt, clippy
-
+    steps:      
     - name: Checkout code
       uses: actions/checkout@v4
 
