@@ -60,6 +60,15 @@ jobs:
 
     - name: Run tests
       run: just test --release
+
+    - name: Run coverage report
+      run: just test-coverage --release
+
+    - name: Publish coverage report to github pages
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./target/llvm-cov/html
       
     # Remove project-specific artifacts from target, to not invalidate the cache:
     - name: Remove project-specific artifacts

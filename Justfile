@@ -11,6 +11,7 @@ deps:
     @echo
     cargo install --locked cargo-nextest
     cargo install --locked git-cliff
+    cargo install --locked cargo-llvm-cov
     @echo
     @echo "All dependencies have been installed."
     @echo
@@ -21,6 +22,7 @@ deps:
 bin-deps:
     cargo binstall --no-confirm cargo-nextest
     cargo binstall --no-confirm git-cliff
+    cargo binstall --no-confirm cargo-llvm-cov
 
 [no-cd]
 run *args:
@@ -43,7 +45,16 @@ test-verbose *args:
 
 test-watch-verbose *args:
     RUST_TEST_THREADS=1 cargo watch -s "clear && cargo nextest run --nocapture -- {{args}}"
-    
+
+test-coverage *args: clean
+    cargo llvm-cov && \
+    cargo llvm-cov report --html && \
+    cd target/llvm-cov/html && \
+    python -m http.server
+
+test-coverage-watch *args:
+    cargo watch -s "clear && just test-coverage {{args}}"
+
 clippy *args:
     RUSTFLAGS="-D warnings" cargo clippy {{args}} --color=always 2>&1 --tests | less -R
 
@@ -89,5 +100,8 @@ release:
     git tag "v${CURRENT_VERSION}"; \
     git push "${GIT_REMOTE}" tag "v${CURRENT_VERSION}";
 
-clean *args:
+clean *args: clean-profile
     cargo clean {{args}}
+
+clean-profile:
+    rm -rf *.profraw *.profdata

@@ -4,6 +4,7 @@ pub use assert_cmd::Command;
 #[allow(unused_imports)]
 pub use log::{debug, error, info, warn};
 pub use predicates::str::contains;
+use std::env;
 use std::fs;
 use std::path::Path;
 use tempfile::TempDir;
