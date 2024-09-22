@@ -2,16 +2,16 @@
 use crate::prelude::*;
 
 use crate::get_options;
+use indexmap::IndexMap;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, ErrorKind};
 use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct Config {
-    pub backups: HashMap<String, String>, // Backup name -> path
+    pub backups: IndexMap<String, String>, // Backup name -> path
 }
 
 pub fn load_config() -> io::Result<Config> {

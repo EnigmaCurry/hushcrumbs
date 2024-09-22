@@ -4,9 +4,9 @@ use crate::prelude::*;
 use crate::config::load_config;
 use base64::engine::general_purpose::URL_SAFE;
 use base64::Engine;
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::collections::HashMap;
 use std::env;
 use std::fs::{canonicalize, File, OpenOptions};
 use std::io;
@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Paths {
-    pub files: HashMap<String, String>, // original_path -> backup_path
+    pub files: IndexMap<String, String>, // original_path -> backup_path
 }
 
 pub fn update_paths_ron(
@@ -125,8 +125,8 @@ pub fn expand_tilde_path(path: &str) -> Option<PathBuf> {
     None
 }
 
-pub fn reverse_files_map(files: &HashMap<String, String>) -> HashMap<String, String> {
-    let mut reversed_map = HashMap::new();
+pub fn reverse_files_map(files: &IndexMap<String, String>) -> IndexMap<String, String> {
+    let mut reversed_map = IndexMap::new();
     for (key, value) in files {
         reversed_map.insert(value.clone(), key.clone());
     }

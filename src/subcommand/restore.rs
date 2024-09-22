@@ -96,7 +96,7 @@ fn remove_backup_entry(backup_name: &str, original_path: &str) -> io::Result<()>
     // Remove the file from the paths map
     debug!("paths: {paths:?}");
     debug!("original_path: {original_path:?}");
-    paths.files.remove(original_path);
+    paths.files.shift_remove(original_path);
     set_backup_paths(backup_name, paths)
 }
 

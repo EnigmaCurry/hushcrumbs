@@ -1,8 +1,9 @@
 use crate::paths::{expand_tilde_path, shorten_path};
 #[allow(unused_imports)]
 use crate::prelude::*;
+use indexmap::IndexMap;
 use serde::Deserialize;
-use std::collections::HashMap;
+use serde_json::json;
 use std::fs::File;
 use std::io::{self, ErrorKind};
 use std::path::Path;
@@ -44,7 +45,7 @@ pub fn list_backups() -> io::Result<()> {
 
 #[derive(Deserialize)]
 struct Paths {
-    files: HashMap<String, String>, // original_path -> backup_path
+    files: IndexMap<String, String>, // original_path -> backup_path
 }
 
 fn get_backup_path(backup_name: &str) -> io::Result<String> {
@@ -94,7 +95,7 @@ fn get_backup_files(backup_name: &str) -> io::Result<Vec<String>> {
     Ok(paths.files.keys().cloned().collect())
 }
 
-pub fn list_backup_files(backup_name: &str) -> io::Result<()> {
+pub fn list_backup_files(backup_name: &str, output_as_json: bool) -> io::Result<()> {
     let backup_dir = &get_backup_path(backup_name)?;
     let backup_dir = Path::new(backup_dir);
     if !backup_dir.exists() {
@@ -106,16 +107,33 @@ pub fn list_backup_files(backup_name: &str) -> io::Result<()> {
     match get_backup_files(backup_name) {
         Ok(files) => {
             if !files.is_empty() {
-                let mut table = get_table(vec![&format!(
-                    "Local files contained in backup ({backup_name}):"
-                )]);
-                for file in files {
-                    let exp = expand_tilde_path(&file).expect("failed to expand path");
-                    let f = exp.as_path().to_str().expect("failed to stringify path");
-                    table.add_row(row![shorten_path(f)]);
+                if output_as_json {
+                    let expanded_files: Vec<String> = files
+                        .iter()
+                        .map(|file| {
+                            let exp = expand_tilde_path(file).expect("failed to expand path");
+                            exp.to_str().expect("failed to stringify path").to_string()
+                        })
+                        .collect();
+                    debug!("expanded_files: {:?}", expanded_files);
+                    let json_output = json!({
+                        "backup_name": backup_name,
+                        "files": expanded_files,
+                    });
+
+                    println!("{}", serde_json::to_string_pretty(&json_output).unwrap());
+                } else {
+                    let mut table = get_table(vec![&format!(
+                        "Local files contained in backup ({backup_name}):"
+                    )]);
+                    for file in files {
+                        let exp = expand_tilde_path(&file).expect("failed to expand path");
+                        let f = exp.as_path().to_str().expect("failed to stringify path");
+                        table.add_row(row![shorten_path(f)]);
+                    }
+                    println!();
+                    table.printstd();
                 }
-                println!();
-                table.printstd();
                 Ok(())
             } else {
                 Err(io::Error::new(

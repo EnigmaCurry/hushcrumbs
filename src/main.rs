@@ -12,7 +12,6 @@ mod config;
 mod confirm;
 mod paths;
 mod prelude;
-
 mod subcommand;
 
 #[macro_use]
@@ -258,7 +257,8 @@ fn main() {
         }
         Some(("ls", sub_matches)) => {
             if let Some(backup_name) = sub_matches.get_one::<String>("BACKUP_NAME") {
-                match list_backup_files(backup_name) {
+                let output_as_json = sub_matches.get_flag("json");
+                match list_backup_files(backup_name, output_as_json) {
                     Err(e) => {
                         eprintln!("{e}");
                         1

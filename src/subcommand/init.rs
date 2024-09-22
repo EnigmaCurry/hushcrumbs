@@ -61,7 +61,7 @@ pub fn deinit_backup(backup_name: &str) -> io::Result<()> {
     let mut config = load_config()?;
     let mut remove = || {
         // Remove the backup from the config
-        if config.backups.remove(backup_name).is_none() {
+        if config.backups.shift_remove(backup_name).is_none() {
             return Err(io::Error::new(
                 io::ErrorKind::NotFound,
                 format!("Backup not found: {backup_name}"),
