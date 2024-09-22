@@ -11,6 +11,9 @@ categories = ["command-line-utilities"]
 readme = "README.md"
 documentation = "https://docs.rs/hushcrumbs"
 
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage,coverage_nightly)'] }
+
 [dependencies]
 assert_cmd = "2.0.16"
 base64 = "0.22.1"
