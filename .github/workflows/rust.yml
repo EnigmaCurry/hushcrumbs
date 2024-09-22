@@ -64,6 +64,32 @@ jobs:
     - name: Run coverage report
       run: just test-coverage --release && ls -lha ./target/llvm-cov/html
 
+    - name: Extract project information
+      id: project_info
+      run: |
+        # Get cargo project name
+        project_name=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].name')
+        echo "PROJECT_NAME=$project_name" >> $GITHUB_ENV
+        
+        # Get current branch name
+        branch_name=${GITHUB_REF##*/}
+        echo "BRANCH_NAME=$branch_name" >> $GITHUB_ENV
+        
+        # Get commit SHA and URL
+        commit_sha=$GITHUB_SHA
+        commit_url="https://github.com/${{ github.repository }}/commit/${commit_sha}"
+        echo "COMMIT_SHA=$commit_sha" >> $GITHUB_ENV
+        echo "COMMIT_URL=$commit_url" >> $GITHUB_ENV
+
+    - name: Inject meta information into index.html
+      run: |
+        project_name="$PROJECT_NAME"
+        branch_name="$BRANCH_NAME"
+        commit_sha="$COMMIT_SHA"
+        commit_url="$COMMIT_URL"
+        # Insert meta information at the end of the <body> in the HTML file
+        sed -i '/<\/body>/i <div style="position:fixed;bottom:10px;left:10px;font-size:12px;color:#666">Project: $project_name | Branch: $branch_name | <a href="$commit_url">Commit: $commit_sha</a></div>' ./target/llvm-cov/html/index.html
+
     - name: Publish coverage report to github pages
       if: github.ref == 'refs/heads/master'
       uses: peaceiris/actions-gh-pages@v4
