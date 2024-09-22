@@ -122,9 +122,24 @@ fn test_restore() {
     assert_path_not_exists(bonjour);
     assert_path_not_exists(howdy);
 
+    // Test restore
     context.run("restore test").assert().success();
-
     assert_path_is_symlink(hi);
+    assert_path_is_symlink(hello);
+    assert_path_is_symlink(bonjour);
+    assert_path_is_symlink(howdy);
+
+    // Restoring is idempotent
+    context.run("restore test").assert().success();
+    assert_path_is_symlink(hi);
+    assert_path_is_symlink(hello);
+    assert_path_is_symlink(bonjour);
+    assert_path_is_symlink(howdy);
+
+    // You can also restore by copying instead of symlinking:
+    context.shell("rm hi.txt").assert().success();
+    context.run("restore test --copy").assert().success();
+    assert_regular_file_exists(hi);
     assert_path_is_symlink(hello);
     assert_path_is_symlink(bonjour);
     assert_path_is_symlink(howdy);
@@ -133,6 +148,10 @@ fn test_restore() {
 #[test]
 fn test_list_backups() {
     let mut context = TestBed::new();
+    // When no backups are found, its a failure:
+    context.run("ls").assert().failure();
+
+    // Add some backups:
     context.run("init one t1").assert().success();
     context.run("init two t2").assert().success();
     context.run("init three t3").assert().success();
@@ -173,4 +192,13 @@ fn test_deinit() {
              ]
         }),
     );
+
+    // Add files to the backup, and this should prevent deinit:
+    context.shell("touch test.txt").assert().success();
+    context.run("add three test.txt").assert().success();
+    context.run("deinit three").assert().failure();
+
+    // Remove the file and deinit should now work:
+    context.run("rm three test.txt").assert().success();
+    context.run("deinit three").assert().success();
 }

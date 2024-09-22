@@ -91,7 +91,7 @@ fn main() {
             Command::new("restore")
                 .about("Restores backup files")
                 .arg(Arg::new("BACKUP_NAME").required(true))
-                .arg(Arg::new("copy").long("copy"))
+                .arg(Arg::new("copy").long("copy").help("Restore file by copying, rather than symlinking").action(clap::ArgAction::SetTrue))
                 .arg(Arg::new("overwrite").long("overwrite")),
         )
         .subcommand(
@@ -210,7 +210,7 @@ fn main() {
         }
         Some(("restore", sub_matches)) => {
             let backup_name = sub_matches.get_one::<String>("BACKUP_NAME").unwrap();
-            let copy = sub_matches.contains_id("copy");
+            let copy = sub_matches.get_flag("copy");
             let overwrite = sub_matches.contains_id("overwrite");
             match restore_backup(backup_name, copy, overwrite) {
                 Ok(_) => {
