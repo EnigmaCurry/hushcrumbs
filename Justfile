@@ -48,7 +48,7 @@ test-watch-verbose *args:
 
 test-coverage *args: clean
     cargo llvm-cov {{args}} && \
-    cargo llvm-cov report --html
+    cargo llvm-cov {{args}} report --html
 
 test-coverage-watch *args:
     cargo watch -s "clear && just test-coverage {{args}} && cd target/llvm-cov/html && python -m http.server"
