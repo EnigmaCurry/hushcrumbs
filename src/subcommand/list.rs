@@ -2,7 +2,7 @@ use crate::paths::{expand_tilde_path, shorten_path};
 #[allow(unused_imports)]
 use crate::prelude::*;
 use indexmap::IndexMap;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::fs::File;
 use std::io::{self, ErrorKind};
@@ -26,17 +26,41 @@ fn get_table(titles: Vec<&str>) -> Table {
     table
 }
 
-pub fn list_backups() -> io::Result<()> {
+pub fn list_backups(output_as_json: bool) -> io::Result<()> {
     match get_backups() {
         Ok(backups) => {
-            let mut table = get_table(vec!["Backup Name", "Backup Path"]);
-            for backup in backups {
-                table.add_row(row![
-                    backup,
-                    get_backup_path(&backup).unwrap_or_else(|e| e.to_string())
-                ]);
+            if output_as_json {
+                // Collect the backups into a vector of BackupData
+                // let json_backups: Vec<BackupData> = backups
+                //     .into_iter()
+                //     .map(|backup| BackupData {
+                //         name: backup.clone(),
+                //         path: get_backup_path(&backup).unwrap_or_else(|e| e.to_string()),
+                //     })
+                //     .collect();
+                let json_backups: Vec<serde_json::Value> = backups
+                    .into_iter()
+                    .map(|backup| {
+                        json! ({
+                            "name": backup.clone(),
+                            "path": get_backup_path(&backup).unwrap_or_else(|e| e.to_string()),
+                        })
+                    })
+                    .collect();
+
+                let json_output = json!({"backups": json_backups});
+
+                println!("{}", json_output);
+            } else {
+                let mut table = get_table(vec!["Backup Name", "Backup Path"]);
+                for backup in backups {
+                    table.add_row(row![
+                        backup,
+                        get_backup_path(&backup).unwrap_or_else(|e| e.to_string())
+                    ]);
+                }
+                table.printstd();
             }
-            table.printstd();
             Ok(())
         }
         Err(e) => Err(e),

@@ -256,8 +256,8 @@ fn main() {
             }
         }
         Some(("ls", sub_matches)) => {
+            let output_as_json = sub_matches.get_flag("json");
             if let Some(backup_name) = sub_matches.get_one::<String>("BACKUP_NAME") {
-                let output_as_json = sub_matches.get_flag("json");
                 match list_backup_files(backup_name, output_as_json) {
                     Err(e) => {
                         eprintln!("{e}");
@@ -266,7 +266,7 @@ fn main() {
                     _ => 0,
                 }
             } else {
-                match list_backups() {
+                match list_backups(output_as_json) {
                     Err(e) => {
                         eprintln!("{e}");
                         1

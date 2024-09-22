@@ -120,3 +120,23 @@ fn test_restore() {
     assert_path_is_symlink(bonjour);
     assert_path_is_symlink(howdy);
 }
+
+#[test]
+fn test_list_backups() {
+    let mut context = TestBed::new();
+    context.run("init one t1").assert().success();
+    context.run("init two t2").assert().success();
+    context.run("init three t3").assert().success();
+
+    assert_command_output_equals_json(
+        &mut context.binary,
+        "ls --json",
+        serde_json::json!({
+            "backups": [
+                {"name": "one", "path": context.temp_dir.path().join("t1").display().to_string()},
+                {"name": "two", "path": context.temp_dir.path().join("t2").display().to_string()},
+                {"name": "three", "path": context.temp_dir.path().join("t3").display().to_string()},
+             ]
+        }),
+    );
+}
