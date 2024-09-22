@@ -21,6 +21,7 @@ fn test_file_add() {
     context.shell("touch hi.txt").assert().success();
     context.shell("touch hello.txt").assert().success();
     context.shell("touch bonjour.txt").assert().success();
+    context.shell("touch other.txt").assert().success();
     context.run("add test hi.txt").assert().success();
     context.run("add test hello.txt").assert().success();
     context.run("add test bonjour.txt").assert().success();
@@ -38,6 +39,12 @@ fn test_file_add() {
              ]
         }),
     );
+
+    // add the same file again and it should error:
+    context.run("add test bonjour.txt").assert().failure();
+    // add a non-backup symlink, it should error:
+    context.shell("ln -s other.txt link.txt").assert().success();
+    context.run("add test link.txt").assert().failure();
 }
 
 #[test]
@@ -60,6 +67,8 @@ fn test_file_remove() {
         .assert()
         .success();
     context.run("rm test howdy.txt").assert().success();
+
+    context.run("rm test unknown.txt").assert().failure();
 
     let hi = &format!("{}/hi.txt", context.temp_dir_path);
     let hello = &format!("{}/hello.txt", context.temp_dir_path);

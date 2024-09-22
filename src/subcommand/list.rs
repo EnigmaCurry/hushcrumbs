@@ -2,7 +2,7 @@ use crate::paths::{expand_tilde_path, shorten_path};
 #[allow(unused_imports)]
 use crate::prelude::*;
 use indexmap::IndexMap;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::json;
 use std::fs::File;
 use std::io::{self, ErrorKind};
