@@ -219,7 +219,8 @@ run it with those args.
 
 ## Testing
 
-This project has incomplete testing.
+This project has incomplete testing. [See the latest coverage
+report](https://enigmacurry.github.io/hushcrumbs/coverage/master/).
 
 ### Run tests
 
