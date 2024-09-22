@@ -48,12 +48,10 @@ test-watch-verbose *args:
 
 test-coverage *args: clean
     cargo llvm-cov && \
-    cargo llvm-cov report --html && \
-    cd target/llvm-cov/html && \
-    python -m http.server
+    cargo llvm-cov report --html
 
 test-coverage-watch *args:
-    cargo watch -s "clear && just test-coverage {{args}}"
+    cargo watch -s "clear && just test-coverage {{args}} && cd target/llvm-cov/html && python -m http.server"
 
 clippy *args:
     RUSTFLAGS="-D warnings" cargo clippy {{args}} --color=always 2>&1 --tests | less -R
