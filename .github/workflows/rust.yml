@@ -88,7 +88,7 @@ jobs:
         commit_sha="$COMMIT_SHA"
         commit_url="$COMMIT_URL"
         # Insert meta information at the end of the <body> in the HTML file
-        sed -i '/<\/body>/i <div style="position:fixed;bottom:10px;left:10px;font-size:12px;color:#666">Project: $project_name | Branch: $branch_name | <a href="$commit_url">Commit: $commit_sha</a></div>' ./target/llvm-cov/html/index.html
+        sed -i "/<\/body>/i <div style=\"position:fixed;bottom:10px;left:10px;font-size:12px;color:#666\">Project: ${project_name} | Branch: ${branch_name} | <a href=\"${commit_url}\">Commit: ${commit_sha}</a></div>" ./target/llvm-cov/html/index.html
 
     - name: Publish coverage report to github pages
       if: github.ref == 'refs/heads/master'
