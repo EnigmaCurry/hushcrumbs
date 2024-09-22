@@ -1,13 +1,14 @@
 use crate::get_options;
 use inquire::Confirm;
 
-#[cfg_attr(coverage_nightly, coverage(off))]
 #[derive(Default, Debug)]
 pub struct ConfirmProps {
     pub message: String,
     pub default: Option<bool>,
     pub help: Option<String>,
 }
+
+#[cfg_attr(coverage_nightly, coverage(off))]
 pub fn confirm(props: ConfirmProps) -> Result<bool, inquire::InquireError> {
     if get_options().no_confirm {
         Ok(true)
