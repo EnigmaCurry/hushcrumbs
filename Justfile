@@ -47,7 +47,7 @@ test-watch-verbose *args:
     RUST_TEST_THREADS=1 cargo watch -s "clear && cargo nextest run --nocapture -- {{args}}"
 
 test-coverage *args: clean
-    cargo llvm-cov --no-cfg-coverage {{args}}  && \
+    cargo llvm-cov {{args}}  && \
     cargo llvm-cov {{args}} report --html
 
 test-coverage-watch *args:

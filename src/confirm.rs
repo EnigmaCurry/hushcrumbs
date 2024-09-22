@@ -1,6 +1,7 @@
 use crate::get_options;
 use inquire::Confirm;
 
+#[cfg_attr(coverage_nightly, coverage(off))]
 #[derive(Default, Debug)]
 pub struct ConfirmProps {
     pub message: String,
@@ -12,7 +13,6 @@ pub fn confirm(props: ConfirmProps) -> Result<bool, inquire::InquireError> {
         Ok(true)
     } else {
         // Interactive confirmation:
-        #[cfg_attr(coverage_nightly, coverage(off))]
         Confirm::new(&props.message)
             .with_default(props.default.unwrap_or(false))
             .with_help_message(&props.help.unwrap_or("".to_string()))
