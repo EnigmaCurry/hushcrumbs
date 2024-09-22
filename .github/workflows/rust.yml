@@ -62,7 +62,7 @@ jobs:
       run: just test --release
 
     - name: Run coverage report
-      run: just test-coverage --release
+      run: just test-coverage --release && ls -lha ./target/llvm-cov/html
 
     - name: Publish coverage report to github pages
       uses: peaceiris/actions-gh-pages@v4
