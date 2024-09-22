@@ -7,13 +7,12 @@ pub struct ConfirmProps {
     pub default: Option<bool>,
     pub help: Option<String>,
 }
-
 pub fn confirm(props: ConfirmProps) -> Result<bool, inquire::InquireError> {
     if get_options().no_confirm {
         Ok(true)
     } else {
         // Interactive confirmation:
-        #[cfg(not(coverage_off))]
+        #[cfg_attr(coverage(off))]
         Confirm::new(&props.message)
             .with_default(props.default.unwrap_or(false))
             .with_help_message(&props.help.unwrap_or("".to_string()))
