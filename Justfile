@@ -61,7 +61,7 @@ test-watch-verbose *args:
 
 # Build coverage report
 test-coverage *args: clean
-    cargo llvm-cov {{args}}  && \
+    cargo llvm-cov nextest {{args}}  && \
     cargo llvm-cov {{args}} report --html
 
 # Continuously build coverage report and serve HTTP report

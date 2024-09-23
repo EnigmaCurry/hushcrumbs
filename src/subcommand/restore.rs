@@ -116,6 +116,7 @@ fn destroy_backup_file(backup_name: &str, original_path: &str) -> io::Result<()>
     let backup_file = Path::new(backup_dir).join(Path::new(id));
     debug!("backup_file: {backup_file:?}");
     remove_backup_entry(backup_name, original_path)?;
+    fs::remove_file(backup_file)?;
     Ok(())
 }
 

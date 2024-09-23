@@ -1,4 +1,6 @@
 mod common;
+use std::fs::canonicalize;
+
 use common::*;
 
 #[test]
@@ -61,19 +63,39 @@ fn test_file_remove() {
     context.run("add test bonjour.txt").assert().success();
     context.run("add test howdy.txt").assert().success();
 
-    context.run("rm test hi.txt").assert().success();
-    context
-        .run("rm test bonjour.txt --delete --no-confirm")
-        .assert()
-        .success();
-    context.run("rm test howdy.txt").assert().success();
-
-    context.run("rm test unknown.txt").assert().failure();
-
+    //context.shell("ls -l").assert().failure();
     let hi = &format!("{}/hi.txt", context.temp_dir_path);
     let hello = &format!("{}/hello.txt", context.temp_dir_path);
     let bonjour = &format!("{}/bonjour.txt", context.temp_dir_path);
     let howdy = &format!("{}/howdy.txt", context.temp_dir_path);
+    assert_path_is_symlink(&hi);
+    assert_path_is_symlink(&hello);
+    assert_path_is_symlink(&bonjour);
+    assert_path_is_symlink(&howdy);
+    let hi_backup = canonicalize(hi).unwrap();
+    let hello_backup = canonicalize(hello).unwrap();
+    let bonjour_backup = canonicalize(bonjour).unwrap();
+    let howdy_backup = canonicalize(howdy).unwrap();
+    assert_regular_file_exists(hi_backup.to_str().unwrap());
+    assert_regular_file_exists(hello_backup.to_str().unwrap());
+    assert_regular_file_exists(bonjour_backup.to_str().unwrap());
+    assert_regular_file_exists(howdy_backup.to_str().unwrap());
+
+    // Remove files:
+    context.run("rm test hi.txt").assert().success();
+    assert_regular_file_exists(hi); // This file is restored, no longer backed up.
+    assert_path_not_exists(hi_backup.to_str().unwrap()); // The backup is removed.
+
+    context
+        .run("rm test bonjour.txt --delete --no-confirm")
+        .assert()
+        .success();
+    assert_path_not_exists(bonjour); // This file is permanently deleted.
+    assert_path_not_exists(bonjour_backup.to_str().unwrap()); // The backup is removed.
+
+    context.run("rm test howdy.txt").assert().success();
+    assert_regular_file_exists(howdy); // This file is restored, no longer backed up.
+    assert_path_not_exists(howdy_backup.to_str().unwrap()); // The backup is removed.
 
     assert_command_output_equals_json(
         &mut context.binary,
@@ -87,10 +109,18 @@ fn test_file_remove() {
         }),
     );
 
-    assert_path_not_exists(bonjour); // This file is permanently deleted.
-    assert_regular_file_exists(hi); // This file is restored, no longer backed up.
     assert_path_is_symlink(hello); // This file is still backed up
     assert_regular_file_exists(howdy); // This file is restored, no longer backed up.
+
+    // Permanently remove hello :
+    context
+        .run("rm test hello.txt --delete --no-confirm")
+        .assert()
+        .success();
+    assert_path_not_exists(hello); // This file is permanently deleted.
+
+    // Test removing an unknown file:
+    context.run("rm test unknown.txt").assert().failure();
 }
 
 #[test]
