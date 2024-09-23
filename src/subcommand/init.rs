@@ -20,6 +20,17 @@ pub fn init_backup(backup_name: &str, path: Option<&str>) -> io::Result<()> {
             format!("Backup path already exists: {backup_path:?}"),
         ));
     }
+
+    // Check if the name already exists:
+    if let Ok(config) = load_config() {
+        if config.backups.get(backup_name).is_some() {
+            return Err(io::Error::new(
+                io::ErrorKind::AlreadyExists,
+                format!("Backup name already exists: {backup_name:?}"),
+            ));
+        }
+    }
+
     debug!("creating directory: {:?}", &backup_path);
     // Create the backup directory
     fs::create_dir(backup_path)?;

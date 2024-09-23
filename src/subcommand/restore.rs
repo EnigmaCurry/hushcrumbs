@@ -20,7 +20,7 @@ pub fn restore_backup(backup_name: &str, copy: bool, overwrite: bool) -> io::Res
     if !paths_file.exists() {
         return Err(io::Error::new(
             ErrorKind::NotFound,
-            "No backup records found in paths.ron",
+            format!("{backup_dir}/paths.ron is missing"),
         ));
     }
 
@@ -134,7 +134,7 @@ pub fn remove_from_backup(backup_name: &str, original_path: &str, delete: bool) 
     if !paths_file.exists() {
         return Err(io::Error::new(
             ErrorKind::NotFound,
-            "No backup records found in paths.ron",
+            format!("{backup_dir}/paths.ron is missing"),
         ));
     }
 
@@ -143,9 +143,8 @@ pub fn remove_from_backup(backup_name: &str, original_path: &str, delete: bool) 
     let canonical_path;
     match canonicalize(original_path) {
         Err(_) => {
-            if !delete {
-                return Err(io::Error::new(io::ErrorKind::InvalidData, "The existing path does not exist. To remove this entry from the backup, without restoring it, add the --delete argument.".to_string()));
-            } else {
+            if delete {
+                debug!("here");
                 destroy_backup_file(
                     backup_name,
                     absolute_path(original_path)
@@ -154,6 +153,8 @@ pub fn remove_from_backup(backup_name: &str, original_path: &str, delete: bool) 
                 )
                 .expect("failed to remove backup file");
                 return Ok(());
+            } else {
+                return Err(io::Error::new(io::ErrorKind::InvalidData, "The existing path does not exist. To remove this entry from the backup, without restoring it, add the --delete argument.".to_string()));
             }
         }
         Ok(p) => canonical_path = p,

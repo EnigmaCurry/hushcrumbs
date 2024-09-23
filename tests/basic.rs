@@ -93,8 +93,22 @@ fn test_file_remove() {
     assert_path_not_exists(bonjour); // This file is permanently deleted.
     assert_path_not_exists(bonjour_backup.to_str().unwrap()); // The backup is removed.
 
-    context.run("rm test howdy.txt").assert().success();
-    assert_regular_file_exists(howdy); // This file is restored, no longer backed up.
+    // Manually remove the howdy.txt symlink, and then test removing it from the backup:
+    context.shell("rm howdy.txt").assert().success();
+    // This should not work, because the existing path does not exist.
+    context
+        .run("rm test howdy.txt")
+        .assert()
+        .failure()
+        .stderr(contains("The existing path does not exist"));
+    assert_path_not_exists(howdy); // This file still does not exist;
+    assert_regular_file_exists(howdy_backup.to_str().unwrap()); // But the backup still does.
+
+    // Use the --delete to really delete the backup even though the path does not exist:
+    context
+        .run("rm test howdy.txt --delete --no-confirm")
+        .assert()
+        .success();
     assert_path_not_exists(howdy_backup.to_str().unwrap()); // The backup is removed.
 
     assert_command_output_equals_json(
@@ -109,18 +123,17 @@ fn test_file_remove() {
         }),
     );
 
-    assert_path_is_symlink(hello); // This file is still backed up
-    assert_regular_file_exists(howdy); // This file is restored, no longer backed up.
+    // Test removing an unknown file:
+    context.run("rm test unknown.txt").assert().failure();
 
     // Permanently remove hello :
+    assert_path_is_symlink(hello); // This file is still backed up
     context
         .run("rm test hello.txt --delete --no-confirm")
         .assert()
         .success();
     assert_path_not_exists(hello); // This file is permanently deleted.
-
-    // Test removing an unknown file:
-    context.run("rm test unknown.txt").assert().failure();
+    assert_path_not_exists(hello_backup.to_str().unwrap()); // And the backup
 }
 
 #[test]
