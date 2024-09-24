@@ -87,3 +87,43 @@ fn test_file_remove() {
     assert_path_not_exists(hello); // This file is permanently deleted.
     assert_path_not_exists(hello_backup.to_str().unwrap()); // And the backup
 }
+
+#[test]
+fn test_remove_conflict() {
+    let context = TestBed::new();
+    context.run("init test t").assert().success();
+    context.shell("touch hi.txt").assert().success();
+    context.run("add test hi.txt").assert().success();
+    context
+        .shell("rm hi.txt && touch hi.txt")
+        .assert()
+        .success();
+    // without the --no-confirm flag, this fails because the overwrite prompt
+    // is non-interactive:
+    context
+        .run("remove test hi.txt")
+        .assert()
+        .failure()
+        .stderr(contains(
+            "A conflicting non-backup file exists in the original path",
+        ));
+    // with the --delete flag, the file will be overwritten:
+    context
+        .run("remove test hi.txt --delete --no-confirm")
+        .assert()
+        .success();
+}
+
+#[test]
+fn test_remove_but_paths_file_missing() {
+    let context = TestBed::new();
+    context.run("init test t").assert().success();
+    context.shell("touch hi.txt").assert().success();
+    context.run("add test hi.txt").assert().success();
+    context.shell("rm t/paths.ron").assert().success();
+    context
+        .run("remove test hi.txt")
+        .assert()
+        .failure()
+        .stderr(contains("paths.ron is missing"));
+}

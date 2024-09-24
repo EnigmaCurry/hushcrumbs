@@ -6,7 +6,8 @@ use subcommand::{
     add::add_to_backup,
     init::{deinit_backup, init_backup},
     list::{list_backup_files, list_backups},
-    restore::{remove_from_backup, restore_backup},
+    remove::remove_from_backup,
+    restore::restore_backup,
 };
 mod config;
 mod confirm;
@@ -247,7 +248,10 @@ fn main() {
                     help: file_path.cloned(),
                     ..Default::default()
                 }) {
-                    Ok(true) => remove(),
+                    Ok(true) => {
+                        debug!("hioi");
+                        remove()
+                    }
                     _ => 1,
                 }
             } else {

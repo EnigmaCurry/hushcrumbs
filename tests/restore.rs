@@ -43,14 +43,112 @@ fn test_restore() {
     assert_path_is_symlink(hello);
     assert_path_is_symlink(bonjour);
     assert_path_is_symlink(howdy);
+}
 
-    // You can also restore by copying instead of symlinking:
+#[test]
+fn test_restore_copy() {
+    let context = TestBed::new();
+    context.run("init test t").assert().success();
+    context.shell("touch hi.txt").assert().success();
+    context.shell("touch hello.txt").assert().success();
+    context.run("add test hi.txt").assert().success();
+    context.run("add test hello.txt").assert().success();
     context.shell("rm hi.txt").assert().success();
     context.run("restore test --copy").assert().success();
+    let hi = &format!("{}/hi.txt", context.temp_dir_path);
+    let hello = &format!("{}/hello.txt", context.temp_dir_path);
     assert_regular_file_exists(hi);
     assert_path_is_symlink(hello);
-    assert_path_is_symlink(bonjour);
-    assert_path_is_symlink(howdy);
+}
+
+#[test]
+fn test_restore_copy_permissions_of_backup() {
+    let context = TestBed::new();
+    context.run("init test t").assert().success();
+    context.shell("touch hi.txt").assert().success();
+    context.run("add test hi.txt").assert().success();
+    context
+        .shell("rm hi.txt && touch hi.txt && chmod -w $(realpath hi.txt)")
+        .assert()
+        .success();
+    context
+        .run("restore test --copy")
+        .assert()
+        .failure()
+        .stderr(contains("Prompt was cancelled or failed"));
+    context
+        .run("restore test --copy --no-confirm")
+        .assert()
+        .failure()
+        .stderr(contains("Permission denied"));
+    let hi = &format!("{}/hi.txt", context.temp_dir_path);
+    assert_regular_file_exists(hi);
+}
+
+#[test]
+fn test_restore_copy_permissions_of_original() {
+    let context = TestBed::new();
+    context.run("init test t").assert().success();
+    context.shell("touch hi.txt").assert().success();
+    context.run("add test hi.txt").assert().success();
+    context
+        .shell("rm hi.txt && touch hi.txt && chmod -w hi.txt")
+        .assert()
+        .success();
+    context
+        .run("restore test --copy")
+        .assert()
+        .failure()
+        .stderr(contains("Prompt was cancelled or failed"));
+    context
+        .run("restore test --copy --no-confirm")
+        .assert()
+        .failure()
+        .stderr(contains("Permission denied"));
+    let hi = &format!("{}/hi.txt", context.temp_dir_path);
+    assert_regular_file_exists(hi);
+}
+
+#[test]
+fn test_restore_permissions() {
+    let context = TestBed::new();
+    context.run("init test t").assert().success();
+    context.shell("touch hi.txt").assert().success();
+    context.run("add test hi.txt").assert().success();
+    context
+        .shell("rm hi.txt && echo different > hi.txt && chmod -w hi.txt")
+        .assert()
+        .success();
+    context
+        .run("restore test")
+        .assert()
+        .failure()
+        .stderr(contains("Prompt was cancelled or failed"));
+    context.run("restore test --no-confirm").assert().success();
+    //context.shell("ls -lha").assert().failure();
+    let hi = &format!("{}/hi.txt", context.temp_dir_path);
+    assert_path_is_symlink(hi);
+}
+
+#[test]
+fn test_restore_conflict() {
+    let context = TestBed::new();
+    context.run("init test t").assert().success();
+    context.shell("touch hi.txt").assert().success();
+    context.run("add test hi.txt").assert().success();
+    context
+        .shell("rm hi.txt && touch hi.txt")
+        .assert()
+        .success();
+    // without the --no-confirm flag, this fails because the overwrite prompt
+    // is non-interactive:
+    context
+        .run("restore test")
+        .assert()
+        .failure()
+        .stderr(contains("Prompt was cancelled or failed"));
+    // with the --no-confrim flag, the file will be overwritten:
+    context.run("restore test --no-confirm").assert().success();
 }
 
 #[test]
@@ -120,18 +218,4 @@ fn test_restore_but_config_file_corrupt() {
         .assert()
         .failure()
         .stderr(contains("Failed to parse config"));
-}
-
-#[test]
-fn test_restore_but_backup_unreadable() {
-    let context = TestBed::new();
-    context.run("init test t").assert().success();
-    context.shell("touch hi.txt").assert().success();
-    context.run("add test hi.txt").assert().success();
-    context.shell("chmod 000 t/*").assert().success();
-    context
-        .run("restore test")
-        .assert()
-        .failure()
-        .stderr(contains("Permission denied"));
 }
