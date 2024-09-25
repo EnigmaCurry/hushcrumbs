@@ -37,7 +37,7 @@ run *args:
 
 # Build + args
 build *args:
-    cargo build {{args}}
+    RUSTFLAGS="-D warnings" cargo build {{args}}
 
 # Build continuously on file change
 build-watch *args:

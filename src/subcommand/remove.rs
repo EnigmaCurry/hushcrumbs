@@ -1,7 +1,7 @@
 #[allow(unused_imports)]
 use crate::prelude::*;
 
-use crate::paths::{absolute_path, get_backup_paths, reverse_files_map, set_backup_paths, Paths};
+use crate::paths::{absolute_path, get_backup_paths, reverse_files_map, set_backup_paths};
 #[allow(unused_imports)]
 use crate::prelude::*;
 
