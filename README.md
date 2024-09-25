@@ -1,7 +1,6 @@
 # Hushcrumbs
 
 [![Crates.io](https://img.shields.io/crates/v/hushcrumbs.svg)](https://crates.io/crates/hushcrumbs)
-[![docs.rs](https://docs.rs/hushcrumbs/badge.svg)](https://docs.rs/hushcrumbs)
 [![Coverage](https://img.shields.io/badge/Coverage-Report-brightgreen)](https://enigmacurry.github.io/hushcrumbs/coverage/master/)
 
 
