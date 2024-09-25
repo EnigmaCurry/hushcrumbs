@@ -106,7 +106,7 @@ pub fn app() -> Command {
                 .arg(
                     Arg::new("shell")
                         .help("The shell to generate completions for")
-                        .required(true)
+                        .required(false)
                         .value_parser(["bash","zsh","fish"])
                 )
         )

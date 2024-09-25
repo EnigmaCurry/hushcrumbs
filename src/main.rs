@@ -202,8 +202,33 @@ fn main() {
                     "fish" => generate_completion_script(Shell::Fish),
                     shell => eprintln!("Unsupported shell: {shell}"),
                 }
+                0
+            } else {
+                eprintln!(
+                    "### Instructions to enable tab completion for {}",
+                    env!("CARGO_BIN_NAME")
+                );
+                eprintln!("");
+                eprintln!("### Bash (put this in ~/.bashrc:)");
+                eprintln!("  source <({} completions bash)", env!("CARGO_BIN_NAME"));
+                eprintln!("");
+                eprintln!("### To make an alias (eg. 'h'), add this too:");
+                eprintln!("  alias h={}", env!("CARGO_BIN_NAME"));
+                eprintln!(
+                    "  complete -F _{} -o bashdefault -o default h",
+                    env!("CARGO_BIN_NAME")
+                );
+                eprintln!("");
+                eprintln!("### If you don't use Bash, you can also use Fish or Zsh:");
+                eprintln!("### Fish (put this in ~/.config/fish/config.fish");
+                eprintln!("  {} completions fish | source)", env!("CARGO_BIN_NAME"));
+                eprintln!("### Zsh (put this in ~/.zshrc)");
+                eprintln!(
+                    "  autoload -U compinit; compinit; source <({} completions zsh)",
+                    env!("CARGO_BIN_NAME")
+                );
+                1
             }
-            0
         }
         _ => 1,
     };
