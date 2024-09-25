@@ -94,7 +94,7 @@ Commands:
   ls           Lists backups or files in a backup [aliases: list]
   commit       Commits a backup (placeholder)
   push         Pushes a backup (placeholder)
-  completions  Generates shell (tab) completions script
+  completions  Generates shell completions script (tab completion)
   help         Print this message or the help of the given subcommand(s)
 
 Options:
