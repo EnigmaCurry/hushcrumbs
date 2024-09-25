@@ -1,7 +1,8 @@
 # Hushcrumbs
 
-[![Crates.io](https://img.shields.io/crates/v/hushcrumbs.svg)](https://crates.io/crates/hushcrumbs)
-[![Coverage](https://img.shields.io/badge/Coverage-Report-brightgreen)](https://enigmacurry.github.io/hushcrumbs/coverage/master/)
+[![Crates.io](https://img.shields.io/crates/v/hushcrumbs?color=blue
+)](https://crates.io/crates/hushcrumbs)
+[![Coverage](https://img.shields.io/badge/Coverage-Report-purple)](https://enigmacurry.github.io/hushcrumbs/coverage/master/)
 
 
 Hushcrumbs is another secrets manager. Its job is to centrally store
