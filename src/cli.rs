@@ -1,29 +1,5 @@
+use crate::config;
 use clap::{Arg, Command};
-use once_cell::sync::Lazy;
-
-pub fn get_default_config_path() -> &'static str {
-    // clap arg defaults require static lifetime, however, we want to
-    // compute the value for this, so we can accomplish both by
-    // leaking the memory for the data, so that it has static lifetime
-    // and without being hard coded.
-    //
-    // once_cell::sync::Lazy is used to ensure this value is only ever
-    // computed one time (memoization).
-    //
-    static DEFAULT_CONFIG_FILE: Lazy<&'static str> = Lazy::new(|| {
-        Box::leak(
-            dirs::config_dir()
-                .expect("Could not find user config directory")
-                .join(env!("CARGO_PKG_NAME"))
-                .join("config.ron")
-                .to_str()
-                .expect("Could not make string for user config directory")
-                .to_string()
-                .into_boxed_str(),
-        )
-    });
-    *DEFAULT_CONFIG_FILE
-}
 
 pub fn app() -> Command {
     Command::new("hushcrumbs")
@@ -37,7 +13,7 @@ pub fn app() -> Command {
                 .global(true)
                 .num_args(1)
                 .value_name("CONFIG_FILE")
-                .default_value(get_default_config_path())
+                .default_value(config::get_default_config_path())
                 .help("Sets the path to the global config file")
         )
         .arg(

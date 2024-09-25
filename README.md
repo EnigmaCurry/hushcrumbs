@@ -52,18 +52,28 @@ cargo install hushcrumbs
 To install tab completion support, put this in your `~/.bashrc` (assuming you use Bash):
 
 ```
-### Bash completion for hushcrumb (Put this in ~/.bashrc)
+### Bash completion for hushcrumbs (Put this in ~/.bashrc)
 source <(hushcrumbs completions bash)
+```
+
+If you don't like to type out the full name `hushcrumbs`, you can make
+a shorter alias (`h`), as well as enable tab completion for the alias
+(`h`):
+
+```
+### Alias hushcrumbs as h (Put this in ~/.bashrc):
+alias h=hushcrumbs
+complete -F _hushcrumbs -o bashdefault -o default h
 ```
 
 Completion for Zsh and/or Fish has also been implemented, but the
 author has not tested this:
 
 ```
-### Zsh completion for hushcrumb (Put this in ~/.zshrc):
+### Zsh completion for hushcrumbs (Put this in ~/.zshrc):
 autoload -U compinit; compinit; source <(hushcrumbs completions zsh)
 
-### Fish completion for hushcrumb (Put this in ~/.config/fish/config.fish):
+### Fish completion for hushcrumbs (Put this in ~/.config/fish/config.fish):
 hushcrumbs completions fish | source
 ```
 

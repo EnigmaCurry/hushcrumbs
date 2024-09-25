@@ -4,6 +4,7 @@ use crate::prelude::*;
 use crate::get_options;
 use indexmap::IndexMap;
 
+use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::{self, ErrorKind};
@@ -50,4 +51,28 @@ pub fn save_config(config: &Config) -> io::Result<()> {
     file.write_all(serialized.as_bytes())?;
     debug!("Config saved: {config_path:?}");
     Ok(())
+}
+
+pub fn get_default_config_path() -> &'static str {
+    // clap arg defaults require static lifetime, however, we want to
+    // compute the value for this, so we can accomplish both by
+    // leaking the memory for the data, so that it has static lifetime
+    // and without being hard coded.
+    //
+    // once_cell::sync::Lazy is used to ensure this value is only ever
+    // computed one time (memoization).
+    //
+    static DEFAULT_CONFIG_FILE: Lazy<&'static str> = Lazy::new(|| {
+        Box::leak(
+            dirs::config_dir()
+                .expect("Could not find user config directory")
+                .join(env!("CARGO_PKG_NAME"))
+                .join("config.ron")
+                .to_str()
+                .expect("Could not make string for user config directory")
+                .to_string()
+                .into_boxed_str(),
+        )
+    });
+    *DEFAULT_CONFIG_FILE
 }
