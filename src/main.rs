@@ -1,6 +1,7 @@
-use clap::{Arg, Command};
+use clap_complete::shells::Shell;
 use confirm::{confirm, ConfirmProps};
 use once_cell::sync::OnceCell;
+use std::io;
 use std::{path::PathBuf, str::FromStr};
 use subcommand::{
     add::add_to_backup,
@@ -9,12 +10,13 @@ use subcommand::{
     remove::remove_from_backup,
     restore::restore_backup,
 };
+
+mod cli;
 mod config;
 mod confirm;
 mod paths;
 mod prelude;
 mod subcommand;
-
 #[macro_use]
 extern crate prettytable;
 
@@ -34,104 +36,7 @@ pub fn get_options() -> &'static Options {
 }
 
 fn main() {
-    let mut cmd = Command::new(env!("CARGO_BIN_NAME"))
-        .version(env!("CARGO_PKG_VERSION"))
-        .author(env!("CARGO_PKG_AUTHORS"))
-        .about(env!("CARGO_PKG_DESCRIPTION"))
-        .arg(
-            Arg::new("config")
-                .long("config")
-                .short('c')
-                .global(true)
-                .num_args(1)
-                .value_name("CONFIG_FILE")
-                .help("Sets the path to the global config file.")
-                .default_value(config::get_default_config_path()),
-        )
-        .arg(
-            Arg::new("log")
-                .long("log")
-                .global(true)
-                .num_args(1)
-                .value_name("LEVEL")
-                .value_parser(["trace", "debug", "info", "warn", "error"])
-                .help("Sets the log level, overriding the RUST_LOG environment variable."),
-        )
-        .arg(
-            Arg::new("verbose")
-                .short('v')
-                .global(true)
-                .help("Sets the log level to debug.")
-                .action(clap::ArgAction::SetTrue),
-        )
-        .arg(
-            Arg::new("no-confirm")
-                .long("no-confirm")
-                .global(true)
-                .help("Disables all interactive confirmation (careful!)")
-                .action(clap::ArgAction::SetTrue),
-        )
-        .subcommand(
-            Command::new("init")
-                .about("Creates a new backup directory")
-                .arg(Arg::new("BACKUP_NAME").required(true))
-                .arg(Arg::new("PATH").required(true)),
-        )
-        .subcommand(
-            Command::new("deinit")
-                .about("Restores all original files and unconfigures the backup directory")
-                .arg(Arg::new("BACKUP_NAME").required(true)),
-        )
-        .subcommand(
-            Command::new("add")
-                .about("Adds a file to the backup and creates a symlink")
-                .arg(Arg::new("BACKUP_NAME").required(true))
-                .arg(Arg::new("PATH").required(true)),
-        )
-        .subcommand(
-            Command::new("restore")
-                .about("Restores backup files")
-                .arg(Arg::new("BACKUP_NAME").required(true))
-                .arg(Arg::new("copy").long("copy").help("Restore file by copying, rather than symlinking").action(clap::ArgAction::SetTrue))
-                .arg(Arg::new("overwrite").long("overwrite")),
-        )
-        .subcommand(
-            Command::new("rm")
-                .visible_alias("remove")
-                .about("Removes a file from the backup")
-                .arg(Arg::new("BACKUP_NAME").required(true))
-                .arg(Arg::new("PATH").required(true))
-                .arg(
-                    Arg::new("delete")
-                        .long("delete")
-                        .action(clap::ArgAction::SetTrue)
-                        .help(
-                            "Delete the file AND the backup, without restoring it (requires confirmation unless also --no-confirm)",
-                        ),
-                ),
-        )
-        .subcommand(
-            Command::new("ls")
-                .visible_alias("list")
-                .about("Lists backups or files in a backup")
-                .arg(Arg::new("BACKUP_NAME").required(false))
-                .arg(
-                    Arg::new("json")
-                        .long("json")
-                        .action(clap::ArgAction::SetTrue)
-                        .help("Output JSON instead of pretty tables."),
-                ),
-        )
-        .subcommand(
-            Command::new("commit")
-                .about("Commits a backup (placeholder)")
-                .arg(Arg::new("BACKUP_NAME").required(true)),
-        )
-        .subcommand(
-            Command::new("push")
-                .about("Pushes a backup (placeholder)")
-                .arg(Arg::new("BACKUP_NAME").required(true)),
-        );
+    let mut cmd = cli::app();
     let matches = cmd.clone().get_matches();
 
     // Set global options for sharing a subset of the args with other modules:
@@ -289,9 +194,29 @@ fn main() {
             info!("Push backup '{}' (not implemented).", backup_name);
             0
         }
+        Some(("completions", sub_matches)) => {
+            if let Some(shell) = sub_matches.get_one::<String>("shell") {
+                match shell.as_str() {
+                    "bash" => generate_completion_script(Shell::Bash),
+                    "zsh" => generate_completion_script(Shell::Zsh),
+                    "fish" => generate_completion_script(Shell::Fish),
+                    shell => eprintln!("Unsupported shell: {shell}"),
+                }
+            }
+            0
+        }
         _ => 1,
     };
 
     eprintln!("");
     std::process::exit(exit_code);
+}
+
+fn generate_completion_script(shell: clap_complete::shells::Shell) {
+    clap_complete::generate(
+        shell,
+        &mut cli::app(),
+        env!("CARGO_BIN_NAME"),
+        &mut io::stdout(),
+    )
 }

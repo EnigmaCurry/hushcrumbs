@@ -47,6 +47,24 @@ Or install via cargo ([crates.io/crates/hushcrumbs](https://crates.io/crates/hus
 cargo install hushcrumbs
 ```
 
+### Tab completion
+
+For tab completion support, put this in your `~/.bashrc` (assuming you use Bash):
+
+```
+### Bash completion (~/.bashrc)
+source <(hushcrumbs completions bash)
+```
+
+Completion for Zsh and/or Fish has been implemented, but the author has not tested this:
+
+```
+### Zsh completion (~/.zshrc):
+# autoload -U compinit; compinit; source <(hushcrumbs completions zsh)
+### Fish completion (~/.config/fish/config.fish):
+# hushcrumbs completions fish | source
+```
+
 
 ## Usage
 
