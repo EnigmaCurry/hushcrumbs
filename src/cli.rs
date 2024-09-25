@@ -102,7 +102,7 @@ pub fn app() -> Command {
         )
         .subcommand(
             Command::new("completions")
-                .about("Generates shell (tab) completions script")
+                .about("Generates shell completions script (tab completion)")
                 .arg(
                     Arg::new("shell")
                         .help("The shell to generate completions for")
