@@ -1,12 +1,15 @@
-use std::process::Output;
-
 pub use assert_cmd::Command;
 #[allow(unused_imports)]
 pub use log::{debug, error, info, warn};
+#[allow(unused_imports)]
 pub use predicates::str::contains;
 use std::env;
 use std::fs;
+#[allow(unused_imports)]
+pub use std::fs::canonicalize;
 use std::path::Path;
+use std::process::Command as StdCommand;
+use std::process::Output;
 use tempfile::TempDir;
 
 #[ctor::ctor]
@@ -27,7 +30,7 @@ impl TestBed {
     fn get_binary(working_dir: &TempDir) -> Command {
         let mut binary = Command::cargo_bin(env!("CARGO_PKG_NAME")).expect("Binary not found");
         binary.current_dir(working_dir.path());
-        binary.arg("-c config.ron");
+        binary.args(["-c", "config.ron"]);
         binary
     }
     pub fn new() -> Self {
@@ -51,14 +54,19 @@ impl TestBed {
         binary.args(args);
         binary
     }
-    pub fn shell(&self, cmd: &str) -> Command {
-        let parts = shell_words::split(cmd).expect("Failed to parse command: {cmd}");
-        assert!(!parts.is_empty(), "Shell command is blank");
-        let mut cmd = Command::new(&parts[0]);
-        cmd.current_dir(&self.temp_dir);
-        if parts.len() > 1 {
-            cmd.args(&parts[1..]);
+    pub fn shell(&self, script: &str) -> Command {
+        fn shell_exists(shell: &str) -> bool {
+            StdCommand::new("sh")
+                .arg("-c")
+                .arg(&format!("command -v {}", shell))
+                .output()
+                .map(|Output { status, .. }| status.success())
+                .unwrap_or(false)
         }
+        let shell = if shell_exists("bash") { "bash" } else { "sh" };
+        let mut cmd = Command::new(shell);
+        cmd.args(["-c", script]);
+        cmd.current_dir(&self.temp_dir);
         cmd
     }
     pub fn get_working_dir(&self) -> &str {
