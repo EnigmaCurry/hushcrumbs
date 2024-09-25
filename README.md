@@ -3,7 +3,7 @@
 [![Crates.io](https://img.shields.io/crates/v/hushcrumbs?color=blue
 )](https://crates.io/crates/hushcrumbs)
 [![Coverage](https://img.shields.io/badge/Coverage-Report-purple)](https://enigmacurry.github.io/hushcrumbs/coverage/master/)
-
+[![Matrix chat](https://img.shields.io/badge/Matrix-Join_Chat-%234fb99a)](https://matrix.to/#/#blog.rymcg.tech:enigmacurry.com)
 
 Hushcrumbs is another secrets manager. Its job is to centrally store
 files that are linked throughout your filesystem. It can ingest any
