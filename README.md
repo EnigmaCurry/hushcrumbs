@@ -86,24 +86,24 @@ $ hushcrumbs
 Usage: hushcrumbs [OPTIONS] [COMMAND]
 
 Commands:
-  init     Creates a new backup directory
-  deinit   Restores all original files and unconfigures the backup directory
-  add      Adds a file to the backup and creates a symlink
-  restore  Restores backup files
-  rm       Removes a file from the backup [aliases: remove]
-  ls       Lists backups or files in a backup [aliases: list]
-  commit   Commits a backup (placeholder)
-  push     Pushes a backup (placeholder)
-  help     Print this message or the help of the given subcommand(s)
+  init         Creates a new backup directory
+  deinit       Restores all original files and unconfigures the backup directory
+  add          Adds a file to the backup and creates a symlink
+  restore      Restores backup files
+  rm           Removes a file from the backup [aliases: remove]
+  ls           Lists backups or files in a backup [aliases: list]
+  commit       Commits a backup (placeholder)
+  push         Pushes a backup (placeholder)
+  completions  Generates shell (tab) completions script
+  help         Print this message or the help of the given subcommand(s)
 
 Options:
-  -c, --config <CONFIG_FILE>  Sets the path to the global config file. [default: /home/ryan/.config/hushcrumbs/config.ron]
+  -c, --config <CONFIG_FILE>  Sets the path to the global config file [default: /home/ryan/.config/hushcrumbs/config.ron]
       --log <LEVEL>           Sets the log level, overriding the RUST_LOG environment variable. [possible values: trace, debug, info, warn, error]
   -v                          Sets the log level to debug.
       --no-confirm            Disables all interactive confirmation (careful!)
   -h, --help                  Print help
   -V, --version               Print version
-
 ```
 
 ### Initialize a new backup with a name and location
