@@ -49,20 +49,22 @@ cargo install hushcrumbs
 
 ### Tab completion
 
-For tab completion support, put this in your `~/.bashrc` (assuming you use Bash):
+To install tab completion support, put this in your `~/.bashrc` (assuming you use Bash):
 
 ```
-### Bash completion (~/.bashrc)
+### Bash completion for hushcrumb (Put this in ~/.bashrc)
 source <(hushcrumbs completions bash)
 ```
 
-Completion for Zsh and/or Fish has been implemented, but the author has not tested this:
+Completion for Zsh and/or Fish has also been implemented, but the
+author has not tested this:
 
 ```
-### Zsh completion (~/.zshrc):
-# autoload -U compinit; compinit; source <(hushcrumbs completions zsh)
-### Fish completion (~/.config/fish/config.fish):
-# hushcrumbs completions fish | source
+### Zsh completion for hushcrumb (Put this in ~/.zshrc):
+autoload -U compinit; compinit; source <(hushcrumbs completions zsh)
+
+### Fish completion for hushcrumb (Put this in ~/.config/fish/config.fish):
+hushcrumbs completions fish | source
 ```
 
 
