@@ -8,7 +8,7 @@ use crate::prelude::*;
 use crate::config::load_config;
 use std::fs::{self, canonicalize};
 use std::io::{self, ErrorKind};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 fn remove_backup_entry(backup_name: &str, original_path: &str) -> io::Result<()> {
     let mut paths = get_backup_paths(backup_name).expect("Could not get backup paths");
@@ -26,7 +26,7 @@ fn destroy_backup_file(backup_name: &str, original_path: &str) -> io::Result<()>
     let id = paths
         .files
         .get(original_path)
-        .expect("failed to get backup file entry");
+        .expect(&format!("failed to get backup file entry: {original_path}"));
     let config = load_config()?;
     let backup_dir = config
         .backups
@@ -46,7 +46,7 @@ pub fn remove_from_backup(backup_name: &str, original_path: &str, delete: bool) 
         .backups
         .get(backup_name)
         .ok_or(io::Error::new(ErrorKind::NotFound, "Backup not found"))?;
-    debug!("got backup dir");
+    debug!("got backup dir: {backup_dir}");
 
     let paths_file = Path::new(backup_dir).join("paths.ron");
 
@@ -58,29 +58,33 @@ pub fn remove_from_backup(backup_name: &str, original_path: &str, delete: bool) 
     }
 
     let paths = get_backup_paths(backup_name).expect("failed to get backup paths");
-
+    let mut original = Path::new(original_path);
     let canonical_path;
-    match canonicalize(original_path) {
-        Err(_) => {
-            if delete {
-                debug!("here");
-                destroy_backup_file(
-                    backup_name,
-                    absolute_path(original_path)
-                        .to_str()
-                        .expect("failed to_str"),
-                )
-                .expect("failed to remove backup file");
-                return Ok(());
-            } else {
-                return Err(io::Error::new(io::ErrorKind::InvalidData, "The existing path does not exist. To remove this entry from the backup, without restoring it, add the --delete argument.".to_string()));
+
+    if original.exists() {
+        canonical_path = canonicalize(original_path).unwrap();
+    } else if delete {
+        match paths.files.get(
+            &absolute_path(original_path)
+                .to_string_lossy()
+                .into_owned()
+                .to_string(),
+        ) {
+            Some(b) => {
+                canonical_path = PathBuf::from(Path::new(&format!("{backup_dir}/{b}")));
+            }
+            None => {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "This file does not exist in the backup".to_string(),
+                ));
             }
         }
-        Ok(p) => canonical_path = p,
+    } else {
+        return Err(io::Error::new(io::ErrorKind::InvalidData, "The original path does not exist. To remove this entry from the backup, without restoring it, add the --delete argument.".to_string()));
     }
-    let mut original = Path::new(original_path);
-    let abs_path;
 
+    let abs_path;
     let files = reverse_files_map(&paths.files);
 
     if canonical_path.as_path().parent().expect("failed dirname()") == Path::new(backup_dir) {
@@ -104,6 +108,13 @@ pub fn remove_from_backup(backup_name: &str, original_path: &str, delete: bool) 
 
                 debug!("before remove");
                 if delete {
+                    destroy_backup_file(
+                        backup_name,
+                        absolute_path(original_path)
+                            .to_str()
+                            .expect("failed to_str"),
+                    )
+                    .expect("failed to remove backup file");
                     // Remove the symlink at the original path
                     if original.exists() && original.is_symlink() {
                         fs::remove_file(original)?;
@@ -130,16 +141,9 @@ pub fn remove_from_backup(backup_name: &str, original_path: &str, delete: bool) 
                 Ok(())
             }
         }
-    } else if original.exists() && delete {
-        destroy_backup_file(
-            backup_name,
-            absolute_path(original_path)
-                .to_str()
-                .expect("failed to_str"),
-        )
     } else if original.exists() {
         return Err(io::Error::new(io::ErrorKind::InvalidData, format!("A conflicting non-backup file exists in the original path: '{}'. To remove this entry from the backup without restoring it, add the --delete argument.", original_path)));
     } else {
-        return Err(io::Error::new(io::ErrorKind::InvalidData, "The existing path does not exist. To remove this entry from the backup, without restoring it, add the --delete argument.".to_string()));
+        return Err(io::Error::new(io::ErrorKind::InvalidData, "The original path does not exist. To remove this entry from the backup, without restoring it, add the --delete argument.".to_string()));
     }
 }

@@ -1,5 +1,7 @@
 pub use assert_cmd::Command;
 #[allow(unused_imports)]
+pub use indoc::{formatdoc, indoc};
+#[allow(unused_imports)]
 pub use log::{debug, error, info, warn};
 #[allow(unused_imports)]
 pub use predicates::str::contains;
@@ -11,7 +13,6 @@ use std::path::Path;
 use std::process::Command as StdCommand;
 use std::process::Output;
 use tempfile::TempDir;
-
 #[ctor::ctor]
 fn setup_logging() {
     env_logger::builder().is_test(true).try_init().unwrap();

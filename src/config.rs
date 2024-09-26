@@ -6,7 +6,7 @@ use indexmap::IndexMap;
 
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::io::{self, ErrorKind};
 use std::path::PathBuf;
 
@@ -24,6 +24,20 @@ pub fn load_config() -> io::Result<Config> {
         return Ok(Config::default());
     }
     // Load the config file:
+    if !OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(config_path.clone())
+        .is_ok()
+    {
+        return Err(io::Error::new(
+            ErrorKind::InvalidData,
+            format!(
+                "{} has invalid permissions. This user needs read and write privileges to it.",
+                config_path.clone().display()
+            ),
+        ));
+    }
     let file = File::open(&config_path)?;
     let config: Config = match ron::de::from_reader(file) {
         Ok(config) => config,

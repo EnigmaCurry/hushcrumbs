@@ -33,3 +33,21 @@ fn test_file_add() {
     context.shell("ln -s other.txt link.txt").assert().success();
     context.run("add test link.txt").assert().failure();
 }
+
+#[test]
+fn test_file_add_but_paths_file_is_corrupt() {
+    let context = TestBed::new();
+    context.run("init test t").assert().success();
+    context.shell("touch hi.txt").assert().success();
+    context.run("add test hi.txt").assert().success();
+    context
+        .shell("echo bad data > t/paths.ron")
+        .assert()
+        .success();
+    context.shell("touch hello.txt").assert().success();
+    context
+        .run("add test hello.txt")
+        .assert()
+        .failure()
+        .stderr(contains("Failed to parse paths file"));
+}

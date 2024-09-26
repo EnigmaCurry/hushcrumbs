@@ -52,7 +52,7 @@ fn test_file_remove() {
         .run("rm test howdy.txt")
         .assert()
         .failure()
-        .stderr(contains("The existing path does not exist"));
+        .stderr(contains("The original path does not exist"));
     assert_path_not_exists(howdy); // This file still does not exist;
     assert_regular_file_exists(howdy_backup.to_str().unwrap()); // But the backup still does.
 
@@ -89,6 +89,22 @@ fn test_file_remove() {
 }
 
 #[test]
+fn test_remove_permanently_delete() {
+    let context = TestBed::new();
+    context.run("init test t").assert().success();
+    context.shell("touch hi.txt").assert().success();
+    context.run("add test hi.txt").assert().success();
+    let hi = &format!("{}/hi.txt", context.temp_dir_path);
+    let hi_backup = canonicalize(hi).unwrap();
+    context
+        .run("rm test hi.txt --delete --no-confirm")
+        .assert()
+        .success();
+    assert_path_not_exists(hi);
+    assert_path_not_exists(hi_backup.to_str().unwrap());
+}
+
+#[test]
 fn test_remove_conflict() {
     let context = TestBed::new();
     context.run("init test t").assert().success();
@@ -115,6 +131,35 @@ fn test_remove_conflict() {
 }
 
 #[test]
+fn test_remove_but_non_existant() {
+    let context = TestBed::new();
+    context.run("init test t").assert().success();
+    context.shell("touch hi.txt").assert().success();
+    context.run("add test hi.txt").assert().success();
+    context.run("rm test hi.txt").assert().success();
+    context.shell("rm hi.txt").assert().success();
+    context
+        .run("remove test hi.txt")
+        .assert()
+        .failure()
+        .stderr(contains("The original path does not exist."));
+}
+
+#[test]
+fn test_remove_but_backup_file_missing() {
+    let context = TestBed::new();
+    context.run("init test t").assert().success();
+    context.shell("touch hi.txt").assert().success();
+    context.run("add test hi.txt").assert().success();
+    context.shell("rm $(realpath hi.txt)").assert().success();
+    context
+        .run("remove test hi.txt")
+        .assert()
+        .failure()
+        .stderr(contains("The original path does not exist"));
+}
+
+#[test]
 fn test_remove_but_paths_file_missing() {
     let context = TestBed::new();
     context.run("init test t").assert().success();
@@ -126,4 +171,35 @@ fn test_remove_but_paths_file_missing() {
         .assert()
         .failure()
         .stderr(contains("paths.ron is missing"));
+}
+
+#[test]
+fn test_remove_files_but_paths_file_corrupt() {
+    let context = TestBed::new();
+    context.run("init test t").assert().success();
+    context.shell("touch hi.txt").assert().success();
+    context.run("add test hi.txt").assert().success();
+    context
+        .shell("echo bad data > t/paths.ron")
+        .assert()
+        .success();
+
+    context
+        .run("rm test hi.txt")
+        .assert()
+        .failure()
+        .stderr(contains("Failed to parse paths.ron"));
+}
+
+#[test]
+fn test_remove_but_backup_entry_missing() {
+    let context = TestBed::new();
+    context.run("init test t").assert().success();
+    context.shell("touch hi.txt").assert().success();
+    context.run("add test hi.txt").assert().success();
+    context
+        .run("remove test hello.txt --delete --no-confirm")
+        .assert()
+        .failure()
+        .stderr(contains("This file does not exist in the backup"));
 }

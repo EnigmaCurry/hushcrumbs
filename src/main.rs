@@ -230,7 +230,7 @@ fn main() {
                 1
             }
         }
-        _ => 1,
+        _invalid_subcommand => 1,
     };
 
     eprintln!("");
