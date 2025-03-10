@@ -8,6 +8,8 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.13"
+aiosql = "^13.3"
+aiosqlite = "^0.21.0"
 
 
 [build-system]

@@ -1,0 +1,7 @@
+/target
+/_test
+/*.profraw
+/*.profdata
+*.sqlite
+*.db
+__pycache__
