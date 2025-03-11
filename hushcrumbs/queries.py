@@ -1,6 +1,7 @@
 import aiosql
 import aiosqlite
 import importlib.resources
+from tabulate import tabulate
 
 with importlib.resources.path("hushcrumbs", "queries.sql") as sql_path:
     queries = aiosql.from_path(sql_path, "aiosqlite")
@@ -33,3 +34,37 @@ async def insert_snapshot_with_env_vars(db_path, context, project, instance, cre
 
         await db.commit()
         return snapshot_id
+
+async def list_latest_snapshots(db_path):
+    async with aiosqlite.connect(db_path) as db:
+        db.row_factory = aiosqlite.Row
+        rows = await queries.get_latest_snapshots(db)
+        if not rows:
+            print("No snapshots found.")
+            return
+
+        headers = rows[0].keys()
+        print(tabulate(rows, headers=headers, tablefmt="plain"))
+
+async def export_snapshot_to_file(db_path, context, project, instance, snapshot_label, out_path):
+    async with aiosqlite.connect(db_path) as db:
+        db.row_factory = aiosqlite.Row
+
+        snapshot_id = await queries.get_snapshot_id(
+            db,
+            context=context,
+            project=project,
+            instance=instance,
+            label=snapshot_label
+        )
+
+        if snapshot_id is None:
+            raise ValueError("Snapshot not found.")
+
+        rows = await queries.get_env_kv_by_snapshot_id(db, snapshot_id=snapshot_id)
+
+        with open(out_path, "w") as f:
+            for row in rows:
+                f.write(f"{row['key']}={row['value']}\n")
+
+        return len(rows)

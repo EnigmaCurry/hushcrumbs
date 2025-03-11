@@ -49,3 +49,29 @@ async def test_insert_snapshot_with_env_vars(tmp_path):
             kv_dict = dict(rows)
             assert kv_dict["FOO"] == "foo-value"
             assert kv_dict["BAR"] == "bar-value"
+
+
+@pytest.mark.asyncio
+async def test_snapshot_overwrite_behavior(tmp_path):
+    db_path = tmp_path / "test.sqlite"
+    await apply_migrations(db_path)
+
+    env_a = {"FOO": "1", "BAR": "2"}
+    env_b = {"BAR": "999"}  # missing FOO on purpose
+
+    # First insert
+    id1 = await insert_snapshot_with_env_vars(
+        db_path, "ctx", "proj", "inst", "test", "v1", env_a
+    )
+
+    # Second insert (new label, missing some vars)
+    id2 = await insert_snapshot_with_env_vars(
+        db_path, "ctx", "proj", "inst", "test", "v2", env_b
+    )
+
+    assert id1 != id2
+
+    async with aiosqlite.connect(db_path) as db:
+        async with db.execute("SELECT COUNT(*) FROM env_kv WHERE snapshot_id = ?", (id2,)) as cursor:
+            (count,) = await cursor.fetchone()
+            assert count == 1  # only BAR in this snapshot

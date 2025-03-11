@@ -31,3 +31,42 @@ RETURNING id;
 INSERT INTO env_kv (snapshot_id, key, value)
 VALUES (:snapshot_id, :key, :value);
 
+-- name: get_latest_snapshots
+SELECT
+    context.name AS context,
+    project.name AS project,
+    instance.name AS instance,
+    env_snapshot.label AS label,
+    env_snapshot.created_at AS created_at
+FROM env_snapshot
+JOIN instance ON env_snapshot.instance_id = instance.id
+JOIN project ON instance.project_id = project.id
+JOIN context ON project.context_id = context.id
+WHERE env_snapshot.id IN (
+    SELECT id FROM (
+        SELECT id,
+               instance_id,
+               MAX(created_at) OVER (PARTITION BY instance_id) AS max_created
+        FROM env_snapshot
+    ) WHERE created_at = max_created
+)
+ORDER BY context.name, project.name, instance.name;
+
+-- name: get_snapshot_id$
+SELECT env_snapshot.id
+FROM env_snapshot
+JOIN instance ON env_snapshot.instance_id = instance.id
+JOIN project ON instance.project_id = project.id
+JOIN context ON project.context_id = context.id
+WHERE context.name = :context
+  AND project.name = :project
+  AND instance.name = :instance
+  AND (:label IS NULL OR env_snapshot.label = :label)
+ORDER BY env_snapshot.created_at DESC
+LIMIT 1;
+
+-- name: get_env_kv_by_snapshot_id
+SELECT key, value
+FROM env_kv
+WHERE snapshot_id = :snapshot_id
+ORDER BY key;

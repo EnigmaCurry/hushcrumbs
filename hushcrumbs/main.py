@@ -5,7 +5,11 @@ import asyncio
 import pathlib
 
 from .db import apply_migrations
-from .queries import insert_snapshot_with_env_vars  # , export_snapshot_to_file
+from .queries import (
+    insert_snapshot_with_env_vars,
+    list_latest_snapshots,
+    export_snapshot_to_file,
+)
 
 DB_PATH = "db.sqlite"
 
@@ -84,7 +88,7 @@ def add(env_file, context, project, instance, label, created_by):
 @click.argument("path", type=click.Path(file_okay=False, dir_okay=True))
 def restore(context, project, instance, snapshot, path):
     """Restore a snapshot to PATH as a .env file."""
-    env_file_path = os.path.join(path, ".env")
+    env_file_path = os.path.join(path, f".env_{context}_{instance}")
     count = asyncio.run(
         export_snapshot_to_file(
             db_path=DB_PATH,
@@ -96,6 +100,12 @@ def restore(context, project, instance, snapshot, path):
         )
     )
     click.echo(f"Restored {count} variables to {env_file_path}")
+
+
+@cli.command()
+def list():
+    """List the latest snapshot for each context/project/instance."""
+    asyncio.run(list_latest_snapshots(DB_PATH))
 
 
 @cli.command()
