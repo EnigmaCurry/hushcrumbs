@@ -114,13 +114,36 @@ def add(env_file, context, project, instance, label, force, created_by):
 
 @cli.command()
 @click.option("--context", required=True, help="Context name")
-@click.option("--project", required=True, help="Project name")
+@click.option("--project", help="Project name (defaults to path basename if not given)")
 @click.option("--instance", required=True, help="Instance name")
 @click.option("--snapshot", help="Snapshot label (optional, defaults to latest)")
-@click.argument("path", type=click.Path(file_okay=False, dir_okay=True))
-def restore(context, project, instance, snapshot, path):
-    """Restore a snapshot to PATH as a .env file."""
+@click.option("--force", is_flag=True, help="Allow mismatch between --project and path")
+@click.argument(
+    "path",
+    required=False,
+    type=click.Path(file_okay=False, dir_okay=True),
+)
+def restore(context, project, instance, snapshot, path, force):
+    """Restore a .env snapshot to PATH or --project directory."""
+    if not project and not path:
+        raise click.UsageError("You must provide either --project or PATH.")
+
+    if not project and path:
+        project = os.path.basename(os.path.abspath(path))
+
+    if not path and project:
+        path = project
+
+    if path and project:
+        path_basename = os.path.basename(os.path.abspath(path))
+        if path_basename != project and not force:
+            raise click.UsageError(
+                f"Project '{project}' does not match directory '{path_basename}'. Use --force to override."
+            )
+
+    os.makedirs(path, exist_ok=True)
     env_file_path = os.path.join(path, f".env_{context}_{instance}")
+
     count = asyncio.run(
         export_snapshot_to_file(
             db_path=DB_PATH,
