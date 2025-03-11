@@ -2,11 +2,24 @@ import aiosql
 import aiosqlite
 import importlib.resources
 from tabulate import tabulate
+import logging
+
+log = logging.getLogger(__name__)
 
 with importlib.resources.path("hushcrumbs", "queries.sql") as sql_path:
     queries = aiosql.from_path(sql_path, "aiosqlite")
 
-async def insert_snapshot_with_env_vars(db_path, context, project, instance, created_by, label, env_dict, env_comments=None):
+async def insert_snapshot_with_env_vars(
+    db_path,
+    context,
+    project,
+    instance,
+    created_by,
+    label,
+    env_dict,
+    env_comments=None,
+    force=False,
+):
     async with aiosqlite.connect(db_path) as db:
         await db.execute("BEGIN")
 
@@ -25,31 +38,47 @@ async def insert_snapshot_with_env_vars(db_path, context, project, instance, cre
         if not instance_id:
             instance_id = await queries.insert_instance(db, name=instance, project_id=project_id)
 
+        # If force is enabled, check for and delete existing snapshot with same label
+        existing_snapshot_id = await queries.get_snapshot_by_instance_and_label(
+            db, instance_id=instance_id, label=label
+        )
+        if existing_snapshot_id:
+            if not force:
+                raise ValueError(f"Snapshot with label '{label}' already exists for instance '{instance}'.")
+            await queries.delete_env_kv_by_snapshot_id(db, snapshot_id=existing_snapshot_id)
+            await queries.delete_snapshot(db, snapshot_id=existing_snapshot_id)
+
         # Insert snapshot
-        snapshot_id = await queries.insert_snapshot(db, instance_id=instance_id, created_by=created_by, label=label)
+        snapshot_id = await queries.insert_snapshot(
+            db, instance_id=instance_id, created_by=created_by, label=label
+        )
 
         # Insert env vars with optional comments
         for key, value in env_dict.items():
-            comment = None
-            if env_comments and key in env_comments:
-                comment = env_comments[key]
-            await queries.insert_env_kv(db, snapshot_id=snapshot_id, key=key, value=value, comment=comment)
+            comment = env_comments.get(key) if env_comments else None
+            await queries.insert_env_kv(
+                db, snapshot_id=snapshot_id, key=key, value=value, comment=comment
+            )
 
         await db.commit()
         return snapshot_id
+
 
 async def list_latest_snapshots(db_path):
     async with aiosqlite.connect(db_path) as db:
         db.row_factory = aiosqlite.Row
         rows = await queries.get_latest_snapshots(db)
         if not rows:
-            print("No snapshots found.")
+            log.error("No snapshots found.")
             return
 
         headers = rows[0].keys()
         print(tabulate(rows, headers=headers, tablefmt="plain"))
 
-async def export_snapshot_to_file(db_path, context, project, instance, snapshot_label, out_path):
+
+async def export_snapshot_to_file(
+    db_path, context, project, instance, snapshot_label, out_path
+):
     async with aiosqlite.connect(db_path) as db:
         db.row_factory = aiosqlite.Row
 
@@ -58,7 +87,7 @@ async def export_snapshot_to_file(db_path, context, project, instance, snapshot_
             context=context,
             project=project,
             instance=instance,
-            label=snapshot_label
+            label=snapshot_label,
         )
 
         if snapshot_id is None:

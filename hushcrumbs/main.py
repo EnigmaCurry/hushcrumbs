@@ -3,6 +3,8 @@ import sys
 import click
 import asyncio
 import pathlib
+import logging
+import aiosqlite
 
 from .db import apply_migrations
 from .queries import (
@@ -11,7 +13,10 @@ from .queries import (
     export_snapshot_to_file,
 )
 
-DB_PATH = "db.sqlite"
+DB_PATH = os.environ.get("DB_PATH", "db.sqlite")
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 
 @click.group()
@@ -34,9 +39,12 @@ def init():
 @click.option("--instance", help="Instance name (e.g., container name)")
 @click.option("--label", required=True, help="Label for the snapshot")
 @click.option(
+    "--force", is_flag=True, help="Force adding snapshot even if label already exists."
+)
+@click.option(
     "--created-by", default="cli", help="User or system creating the snapshot"
 )
-def add(env_file, context, project, instance, label, created_by):
+def add(env_file, context, project, instance, label, force, created_by):
     """Add a .env file to the database."""
     env_path = pathlib.Path(env_file)
     env_vars = {}
@@ -78,18 +86,29 @@ def add(env_file, context, project, instance, label, created_by):
     env_comments = {key: comment for key, (_, comment) in env_vars.items() if comment}
 
     # Assumes instance_id lookup or creation is handled inside this function
-    asyncio.run(
-        insert_snapshot_with_env_vars(
-            db_path=DB_PATH,
-            context=context,
-            project=project,
-            instance=instance,
-            created_by=created_by,
-            label=label,
-            env_dict=env_dict,
-            env_comments=env_comments,
+    try:
+        asyncio.run(
+            insert_snapshot_with_env_vars(
+                db_path=DB_PATH,
+                context=context,
+                project=project,
+                instance=instance,
+                created_by=created_by,
+                label=label,
+                env_dict=env_dict,
+                env_comments=env_comments,
+                force=force,
+            )
         )
-    )
+    except ValueError:
+        if not force:
+            log.error(
+                "That label has already been used for this instance. Use --force to overwrite it."
+            )
+            sys.exit(1)
+        else:
+            raise
+
     click.echo(f"Snapshot '{label}' added for {context}/{project}/{instance}.")
 
 

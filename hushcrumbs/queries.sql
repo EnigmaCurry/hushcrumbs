@@ -70,3 +70,15 @@ SELECT key, value, comment
 FROM env_kv
 WHERE snapshot_id = :snapshot_id
 ORDER BY key;
+
+-- name: get_snapshot_by_instance_and_label$
+SELECT id FROM env_snapshot
+WHERE instance_id = :instance_id AND label = :label;
+
+-- name: delete_env_kv_by_snapshot_id!
+DELETE FROM env_kv
+WHERE snapshot_id = :snapshot_id;
+
+-- name: delete_snapshot!
+DELETE FROM env_snapshot
+WHERE id = :snapshot_id;
