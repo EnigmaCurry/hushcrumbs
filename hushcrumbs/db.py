@@ -1,6 +1,7 @@
 import aiosqlite
 import asyncio
 import os
+from pathlib import Path
 
 DB_PATH = "db.sqlite"
 MIGRATIONS_DIR = "migrations"
@@ -29,16 +30,17 @@ async def set_version(db, version):
     await db.commit()
 
 async def apply_migrations(db_path):
+    migrations_dir = Path(__file__).parent / "migrations"
+    files = sorted(f for f in os.listdir(migrations_dir) if f.endswith(".sql"))
     async with aiosqlite.connect(db_path) as db:
         current_version = await get_current_version(db)
-
-        # List migration files sorted by version number
-        files = sorted(f for f in os.listdir(MIGRATIONS_DIR) if f.endswith(".sql"))
+        files = sorted(os.path.abspath(
+            os.path.join(migrations_dir,f)) for f in os.listdir(migrations_dir) if f.endswith(".sql"))
         for file in files:
-            version = int(file.split("_")[0])
+            version = int(os.path.basename(file).split("_")[0])
             if version > current_version:
                 print(f"Applying migration {file}...")
-                with open(os.path.join(MIGRATIONS_DIR, file)) as f:
+                with open(file) as f:
                     await db.executescript(f.read())
                 await set_version(db, version)
                 print(f"Migration {version} applied.")
