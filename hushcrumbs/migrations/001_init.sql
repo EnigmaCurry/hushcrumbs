@@ -44,5 +44,6 @@ CREATE TABLE IF NOT EXISTS env_kv (
     snapshot_id INTEGER NOT NULL,
     key TEXT NOT NULL,
     value TEXT NOT NULL,
+    comment TEXT,
     FOREIGN KEY (snapshot_id) REFERENCES env_snapshot(id) ON DELETE CASCADE
 );

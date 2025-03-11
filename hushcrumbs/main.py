@@ -40,14 +40,22 @@ def add(env_file, context, project, instance, label, created_by):
     """Add a .env file to the database."""
     env_path = pathlib.Path(env_file)
     env_vars = {}
+    comment_buffer = []
 
     with open(env_path) as f:
         for line in f:
-            line = line.strip()
-            if not line or line.startswith("#") or "=" not in line:
+            stripped = line.strip()
+            if not stripped:
+                comment_buffer = []  # Blank line breaks comment block
                 continue
-            key, value = line.split("=", 1)
-            env_vars[key.strip()] = value.strip()
+            if stripped.startswith("#"):
+                comment_buffer.append(stripped.lstrip("# "))
+                continue
+            if "=" in stripped:
+                key, value = stripped.split("=", 1)
+                comment = "\n".join(comment_buffer) if comment_buffer else None
+                env_vars[key.strip()] = (value.strip(), comment)
+                comment_buffer = []  # Reset after variable
 
     if not project:
         project = env_path.parent.name
@@ -65,7 +73,11 @@ def add(env_file, context, project, instance, label, created_by):
         context = context or context_part
         instance = instance or instance_part
 
-    # This assumes instance_id lookup or creation is handled inside this function
+    # Reformat env_vars into the expected structure
+    env_dict = {key: value for key, (value, _) in env_vars.items()}
+    env_comments = {key: comment for key, (_, comment) in env_vars.items() if comment}
+
+    # Assumes instance_id lookup or creation is handled inside this function
     asyncio.run(
         insert_snapshot_with_env_vars(
             db_path=DB_PATH,
@@ -74,7 +86,8 @@ def add(env_file, context, project, instance, label, created_by):
             instance=instance,
             created_by=created_by,
             label=label,
-            env_dict=env_vars,
+            env_dict=env_dict,
+            env_comments=env_comments,
         )
     )
     click.echo(f"Snapshot '{label}' added for {context}/{project}/{instance}.")

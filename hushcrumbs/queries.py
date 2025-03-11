@@ -6,7 +6,7 @@ from tabulate import tabulate
 with importlib.resources.path("hushcrumbs", "queries.sql") as sql_path:
     queries = aiosql.from_path(sql_path, "aiosqlite")
 
-async def insert_snapshot_with_env_vars(db_path, context, project, instance, created_by, label, env_dict):
+async def insert_snapshot_with_env_vars(db_path, context, project, instance, created_by, label, env_dict, env_comments=None):
     async with aiosqlite.connect(db_path) as db:
         await db.execute("BEGIN")
 
@@ -28,9 +28,12 @@ async def insert_snapshot_with_env_vars(db_path, context, project, instance, cre
         # Insert snapshot
         snapshot_id = await queries.insert_snapshot(db, instance_id=instance_id, created_by=created_by, label=label)
 
-        # Insert env vars
+        # Insert env vars with optional comments
         for key, value in env_dict.items():
-            await queries.insert_env_kv(db, snapshot_id=snapshot_id, key=key, value=value)
+            comment = None
+            if env_comments and key in env_comments:
+                comment = env_comments[key]
+            await queries.insert_env_kv(db, snapshot_id=snapshot_id, key=key, value=value, comment=comment)
 
         await db.commit()
         return snapshot_id
@@ -65,6 +68,9 @@ async def export_snapshot_to_file(db_path, context, project, instance, snapshot_
 
         with open(out_path, "w") as f:
             for row in rows:
-                f.write(f"{row['key']}={row['value']}\n")
+                if row["comment"]:
+                    for line in row["comment"].splitlines():
+                        f.write(f"# {line}\n")
+                f.write(f"{row['key']}={row['value']}\n\n")
 
         return len(rows)

@@ -28,8 +28,8 @@ RETURNING id;
 
 -- Env Vars
 -- name: insert_env_kv!
-INSERT INTO env_kv (snapshot_id, key, value)
-VALUES (:snapshot_id, :key, :value);
+INSERT INTO env_kv (snapshot_id, key, value, comment)
+VALUES (:snapshot_id, :key, :value, :comment);
 
 -- name: get_latest_snapshots
 SELECT
@@ -66,7 +66,7 @@ ORDER BY env_snapshot.created_at DESC
 LIMIT 1;
 
 -- name: get_env_kv_by_snapshot_id
-SELECT key, value
+SELECT key, value, comment
 FROM env_kv
 WHERE snapshot_id = :snapshot_id
 ORDER BY key;
