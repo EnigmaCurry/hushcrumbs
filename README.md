@@ -1,14 +1,15 @@
 # hushcrumbs
 
-**hushcrumbs** is an encrypted `.env` (dotenv) manager made
-specifically for
-[d.rymcg.tech](https://github.com/EnigmaCurry/d.rymcg.tech) (but may
-also be used for general purposes). It provides both a **command-line
-interface (CLI)** and an **HTTP API**.
+**hushcrumbs** is an encrypted `.env` (dotenv) file snapshot manager
+backed by a SQLite database. It provides both a **command-line
+interface (CLI)** and an **HTTP API**. It lets you store, encrypt,
+snapshot, restore, and audit environment variable files (and their
+documentation comments) across different contexts, projects, and
+instances.
 
-It lets you store, encrypt, snapshot, restore, and audit environment
-variable files across different contexts with optional metadata and
-comments preserved.
+Status: Experimental - this is intended as an integration piece for
+[d.rymcg.tech](https://github.com/EnigmaCurry/d.rymcg.tech) - but it
+may have some utility outside of this domain.
 
 ## ✨ Features
 
