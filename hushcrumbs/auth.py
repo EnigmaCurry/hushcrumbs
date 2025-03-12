@@ -22,5 +22,5 @@ async def generate_auth_key(db_path: str):
 def validate_auth_key(db_path: str):
     encryption_key = get_encryption_key()
     encrypted = asyncio.run(load_encrypted_auth_text(db_path))
-    if not validate_encrypted_token(encrypted, encryption_key.encode()):
+    if not validate_encrypted_token(encrypted, encryption_key.decode()):
         raise ValueError("Invalid encryption key or corrupted auth token")

@@ -64,8 +64,9 @@ async def insert_snapshot_with_env_vars(
         # Insert env vars with optional comments
         for key, value in env_dict.items():
             comment = env_comments.get(key) if env_comments else None
+            encrypted_comment = encrypt_value(comment) if comment else None
             await queries.insert_env_kv(
-                db, snapshot_id=snapshot_id, key=key, value=encrypt_value(value), comment=encrypt_value(comment)
+                db, snapshot_id=snapshot_id, key=key, value=encrypt_value(value), comment=encrypted_comment
             )
 
         await db.commit()
@@ -106,8 +107,12 @@ async def export_snapshot_to_file(
         with open(out_path, "w") as f:
             for row in rows:
                 if row["comment"]:
-                    for line in decrypt_value(row["comment"]).splitlines():
-                        f.write(f"# {line}\n")
+                    try:
+                        comment_lines = decrypt_value(row["comment"]).splitlines()
+                        for line in comment_lines:
+                            f.write(f"# {line}\n")
+                    except Exception:
+                        log.warning(f"⚠️ Could not decrypt comment for key {row['key']}")
                 f.write(f"{row['key']}={decrypt_value(row['value'])}\n\n")
 
         return len(rows)

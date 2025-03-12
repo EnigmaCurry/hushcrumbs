@@ -10,11 +10,16 @@ log = logging.getLogger(__name__)
 AUTH_CHECK_VALUE = b"hushcrumbs-auth-check-text"
 
 def get_encryption_key():
-    try:
-        return os.environ["AUTH_KEY"]
-    except KeyError:
-        log.error("❌ Error: encryption key was not provided. You must set AUTH_KEY environment variable.")
+    key = os.environ.get("AUTH_KEY")
+    if not key:
+        log.error("❌ AUTH_KEY environment variable not set.")
         raise SystemExit(1)
+    try:
+        Fernet(key)
+    except Exception:
+        log.error("❌ AUTH_KEY is not a valid Fernet key.")
+        raise SystemExit(1)
+    return key.encode()
 
 def encrypt_value(value: str) -> str:
     key = get_encryption_key()

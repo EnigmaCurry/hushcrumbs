@@ -4,7 +4,6 @@ import click
 import asyncio
 import pathlib
 import logging
-import aiosqlite
 
 from .db import apply_migrations
 from .queries import (
@@ -36,7 +35,7 @@ def init():
         click.echo(
             "\nIMPORTANT - SAVE THIS KEY - YOU WILL NEED THIS KEY TO UNLOCK YOUR DATABASE!"
         )
-        click.echo(key.decode())
+        click.echo("AUTH_KEY=" + key.decode())
 
     asyncio.run(_init())
 
