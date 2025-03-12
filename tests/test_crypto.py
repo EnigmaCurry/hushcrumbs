@@ -24,7 +24,7 @@ def test_encrypt_decrypt_roundtrip():
 
 def test_encrypt_value_and_decrypt_value(monkeypatch):
     key = Fernet.generate_key()
-    monkeypatch.setenv("AUTH_KEY", key.decode())
+    monkeypatch.setenv("ENCRYPTION_KEY", key.decode())
 
     secret = "super_secret"
     encrypted = crypto.encrypt_value(secret)

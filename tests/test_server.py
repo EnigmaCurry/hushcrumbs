@@ -12,13 +12,13 @@ from hushcrumbs.queries import load_queries, insert_auth_token
 
 DB_PATH = "test_api.sqlite"
 API_TOKEN = "test-token"
-AUTH_KEY = Fernet.generate_key()
+ENCRYPTION_KEY = Fernet.generate_key()
 
 @pytest.fixture(scope="module", autouse=True)
 def setup_db():
     os.environ["DB_PATH"] = DB_PATH
-    os.environ["AUTH_KEY"] = AUTH_KEY.decode()
-    print("AUTH_KEY (setup_db):", os.environ.get("AUTH_KEY", None))
+    os.environ["ENCRYPTION_KEY"] = ENCRYPTION_KEY.decode()
+    print("ENCRYPTION_KEY (setup_db):", os.environ.get("ENCRYPTION_KEY", None))
     os.environ["API_TOKEN"] = API_TOKEN
 
     from hushcrumbs.server import app
@@ -28,7 +28,7 @@ def setup_db():
     asyncio.run(apply_migrations(DB_PATH))
 
     # Insert encrypted auth token
-    encrypted_token = encrypt_token(AUTH_KEY)
+    encrypted_token = encrypt_token(ENCRYPTION_KEY)
     async def init_auth():
         load_queries()
         async with aiosqlite.connect(DB_PATH) as db:
@@ -43,9 +43,9 @@ def setup_db():
 
 @pytest.fixture
 def test_key_and_token():
-    os.environ["AUTH_KEY"] = AUTH_KEY.decode()
+    os.environ["ENCRYPTION_KEY"] = ENCRYPTION_KEY.decode()
     os.environ["API_TOKEN"] = "test-token"
-    return AUTH_KEY.decode()
+    return ENCRYPTION_KEY.decode()
 
 @pytest.fixture
 def client(tmp_path, test_key_and_token):
@@ -53,7 +53,7 @@ def client(tmp_path, test_key_and_token):
     os.environ["DB_PATH"] = str(db_path)
 
     key_str = test_key_and_token.decode() if isinstance(test_key_and_token, bytes) else test_key_and_token
-    os.environ["AUTH_KEY"] = key_str
+    os.environ["ENCRYPTION_KEY"] = key_str
     os.environ["API_TOKEN"] = API_TOKEN
 
     loop = asyncio.new_event_loop()

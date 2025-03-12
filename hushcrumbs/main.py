@@ -38,7 +38,7 @@ def init():
         click.echo(
             "\nIMPORTANT - SAVE THIS KEY - YOU WILL NEED THIS KEY TO UNLOCK YOUR DATABASE!"
         )
-        click.echo("AUTH_KEY=" + key.decode())
+        click.echo("ENCRYPTION_KEY=" + key.decode())
 
     asyncio.run(_init())
 

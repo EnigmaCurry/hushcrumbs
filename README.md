@@ -38,16 +38,16 @@ Or clone and run directly with `python -m hushcrumbs`.
 hushcrumbs init
 ```
 
-You'll be shown an **AUTH_KEY** environment variable you must store
+You'll be shown an **ENCRYPTION_KEY** environment variable you must store
 and set securely. This is used to encrypt and decrypt all secrets.
 
 > 🛑 If you lose this key, you won't be able to decrypt your stored variables!
 
-You must set the `AUTH_KEY` variable with the value printed during
+You must set the `ENCRYPTION_KEY` variable with the value printed during
 initialization:
 
 ```bash
-export AUTH_KEY=xxxxxxxxxxxxxx
+export ENCRYPTION_KEY=xxxxxxxxxxxxxx
 ```
 
 ---
@@ -150,14 +150,14 @@ Tests cover both the CLI and HTTP API. Snapshots are encrypted and validated.
 
 - Variables are encrypted using [Fernet symmetric encryption](https://cryptography.io/en/latest/fernet/).
 - An encrypted auth token is stored in the DB and validated on every operation.
-- The `AUTH_KEY` must be exported in the environment:
+- The `ENCRYPTION_KEY` must be exported in the environment:
 
 ```bash
-export AUTH_KEY=...
+export ENCRYPTION_KEY=...
 ```
 
-- The HTTP server protects access using a separate token, not to be
-  confused with the AUTH_KEY.
+- The HTTP server protects access using a separate bearer token, not to be
+  confused with the `ENCRYPTION_KEY`.
 
 ---
 
