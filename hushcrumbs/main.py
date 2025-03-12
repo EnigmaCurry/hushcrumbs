@@ -168,9 +168,12 @@ def list():
 @click.option("--host", default="127.0.0.1", help="Host to bind to.")
 @click.option("--port", default=8000, help="Port to listen on.")
 @click.option("--reload", is_flag=True, help="Enable auto-reload (for development).")
-def server(host, port, reload):
+@click.option("--token", required=True, help="Token required for accessing the API.")
+def server(host, port, reload, token):
     """Run the hushcrumbs HTTP API server."""
     import uvicorn
+
+    os.environ["API_TOKEN"] = token
 
     config = {
         "app": "hushcrumbs.server:app",

@@ -5,14 +5,14 @@ import asyncio
 import os
 from .parser import parse_env_file_contents
 from .queries import load_queries, export_snapshot_to_file
-from .auth import validate_auth_key
+from .auth import validate_auth_key, get_token_validator
 import aiosqlite
 
 import logging
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
-app = FastAPI()
+app = FastAPI(dependencies=[get_token_validator()])
 DB_PATH = os.environ.get("DB_PATH", os.path.abspath("db.sqlite"))
 
 @app.on_event("startup")
