@@ -4,16 +4,19 @@ import click
 import asyncio
 import pathlib
 import logging
+from tabulate import tabulate
 
 from .db import apply_migrations
 from .queries import (
+    load_queries,
     insert_snapshot_with_env_vars,
-    list_latest_snapshots,
+    get_latest_snapshots,
     export_snapshot_to_file,
 )
 from .auth import generate_auth_key, validate_auth_key
+from .parser import parse_env_file_contents
 
-DB_PATH = os.environ.get("DB_PATH", "db.sqlite")
+DB_PATH = os.environ.get("DB_PATH", os.path.abspath("db.sqlite"))
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -55,24 +58,13 @@ def init():
 def add(env_file, context, project, instance, label, force, created_by):
     """Add a .env file to the database."""
     env_path = pathlib.Path(env_file)
-    env_vars = {}
-    comment_buffer = []
 
-    validate_auth_key(DB_PATH)
+    load_queries()
+    asyncio.run(validate_auth_key(DB_PATH))
     with open(env_path) as f:
-        for line in f:
-            stripped = line.strip()
-            if not stripped:
-                comment_buffer = []  # Blank line breaks comment block
-                continue
-            if stripped.startswith("#"):
-                comment_buffer.append(stripped.lstrip("# "))
-                continue
-            if "=" in stripped:
-                key, value = stripped.split("=", 1)
-                comment = "\n".join(comment_buffer) if comment_buffer else None
-                env_vars[key.strip()] = (value.strip(), comment)
-                comment_buffer = []  # Reset after variable
+        contents = f.read()
+
+    env_dict, env_comments = parse_env_file_contents(contents)
 
     if not project:
         project = env_path.parent.name
@@ -89,10 +81,6 @@ def add(env_file, context, project, instance, label, force, created_by):
         _, context_part, instance_part = name.split("_")
         context = context or context_part
         instance = instance or instance_part
-
-    # Reformat env_vars into the expected structure
-    env_dict = {key: value for key, (value, _) in env_vars.items()}
-    env_comments = {key: comment for key, (_, comment) in env_vars.items() if comment}
 
     # Assumes instance_id lookup or creation is handled inside this function
     try:
@@ -137,7 +125,8 @@ def restore(context, project, instance, snapshot, path, force):
     if not project and not path:
         raise click.UsageError("You must provide either --project or PATH.")
 
-    validate_auth_key(DB_PATH)
+    load_queries()
+    asyncio.run(validate_auth_key(DB_PATH))
     if not project and path:
         project = os.path.basename(os.path.abspath(path))
 
@@ -170,7 +159,28 @@ def restore(context, project, instance, snapshot, path, force):
 @cli.command()
 def list():
     """List the latest snapshot for each context/project/instance."""
-    asyncio.run(list_latest_snapshots(DB_PATH))
+    load_queries()
+    rows, headers = asyncio.run(get_latest_snapshots(DB_PATH))
+    print(tabulate(rows, headers=headers, tablefmt="plain"))
+
+
+@cli.command()
+@click.option("--host", default="127.0.0.1", help="Host to bind to.")
+@click.option("--port", default=8000, help="Port to listen on.")
+@click.option("--reload", is_flag=True, help="Enable auto-reload (for development).")
+def server(host, port, reload):
+    """Run the hushcrumbs HTTP API server."""
+    import uvicorn
+
+    config = {
+        "app": "hushcrumbs.server:app",
+        "host": host,
+        "port": port,
+        "reload": reload,
+        "factory": False,
+    }
+    click.echo(f"🌐 Starting hushcrumbs API at http://{host}:{port}")
+    uvicorn.run(**config)
 
 
 @cli.command()
