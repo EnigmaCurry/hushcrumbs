@@ -3,11 +3,19 @@ import aiosqlite
 import importlib.resources
 from tabulate import tabulate
 import logging
+from .crypto import encrypt_value, decrypt_value
 
 log = logging.getLogger(__name__)
 
 with importlib.resources.path("hushcrumbs", "queries.sql") as sql_path:
     queries = aiosql.from_path(sql_path, "aiosqlite")
+
+async def load_encrypted_auth_text(db_path):
+    async with aiosqlite.connect(db_path) as db:
+        return await queries.get_auth_token(db)
+
+async def insert_auth_token(db, encrypted_value):
+    await queries.insert_auth_token(db, encrypted_value=encrypted_value)
 
 async def insert_snapshot_with_env_vars(
     db_path,
@@ -57,7 +65,7 @@ async def insert_snapshot_with_env_vars(
         for key, value in env_dict.items():
             comment = env_comments.get(key) if env_comments else None
             await queries.insert_env_kv(
-                db, snapshot_id=snapshot_id, key=key, value=value, comment=comment
+                db, snapshot_id=snapshot_id, key=key, value=encrypt_value(value), comment=encrypt_value(comment)
             )
 
         await db.commit()
@@ -98,8 +106,9 @@ async def export_snapshot_to_file(
         with open(out_path, "w") as f:
             for row in rows:
                 if row["comment"]:
-                    for line in row["comment"].splitlines():
+                    for line in decrypt_value(row["comment"]).splitlines():
                         f.write(f"# {line}\n")
-                f.write(f"{row['key']}={row['value']}\n\n")
+                f.write(f"{row['key']}={decrypt_value(row['value'])}\n\n")
 
         return len(rows)
+

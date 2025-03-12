@@ -1,3 +1,9 @@
+-- name: insert_auth_token!
+INSERT INTO auth_token (id, encrypted_value) VALUES (1, :encrypted_value);
+
+-- name: get_auth_token$
+SELECT encrypted_value FROM auth_token WHERE id = 1;
+
 -- Context
 -- name: get_context$
 SELECT id FROM context WHERE name = :name;

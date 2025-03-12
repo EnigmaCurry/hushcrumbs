@@ -2,19 +2,22 @@ import aiosqlite
 import asyncio
 import os
 from pathlib import Path
+import logging
 
 DB_PATH = "db.sqlite"
 MIGRATIONS_DIR = "migrations"
+
+log = logging.getLogger(__name__)
 
 async def ensure_database_is_ready():
     # If the file doesn't exist, it will be created during migrations
     db_exists = os.path.exists(DB_PATH)
 
     if not db_exists:
-        print("Database not found. Creating and applying initial schema...")
+        log.error("Database not found. Creating and applying initial schema...")
 
     await apply_migrations(DB_PATH)
-    print("Database is ready and up-to-date.")
+    log.info("Database is ready and up-to-date.")
 
 
 async def get_current_version(db):
@@ -39,8 +42,8 @@ async def apply_migrations(db_path):
         for file in files:
             version = int(os.path.basename(file).split("_")[0])
             if version > current_version:
-                print(f"Applying migration {file}...")
+                log.info(f"Applying migration {file}...")
                 with open(file) as f:
                     await db.executescript(f.read())
                 await set_version(db, version)
-                print(f"Migration {version} applied.")
+                log.info(f"Migration {version} applied.")

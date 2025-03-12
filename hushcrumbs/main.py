@@ -12,6 +12,7 @@ from .queries import (
     list_latest_snapshots,
     export_snapshot_to_file,
 )
+from .auth import generate_auth_key, validate_auth_key
 
 DB_PATH = os.environ.get("DB_PATH", "db.sqlite")
 
@@ -29,7 +30,15 @@ def cli():
 def init():
     """Initialize the database."""
     asyncio.run(apply_migrations(DB_PATH))
-    click.echo("Database initialized.")
+
+    async def _init():
+        key = await generate_auth_key(DB_PATH)
+        click.echo(
+            "\nIMPORTANT - SAVE THIS KEY - YOU WILL NEED THIS KEY TO UNLOCK YOUR DATABASE!"
+        )
+        click.echo(key.decode())
+
+    asyncio.run(_init())
 
 
 @cli.command()
@@ -50,6 +59,7 @@ def add(env_file, context, project, instance, label, force, created_by):
     env_vars = {}
     comment_buffer = []
 
+    validate_auth_key(DB_PATH)
     with open(env_path) as f:
         for line in f:
             stripped = line.strip()
@@ -128,6 +138,7 @@ def restore(context, project, instance, snapshot, path, force):
     if not project and not path:
         raise click.UsageError("You must provide either --project or PATH.")
 
+    validate_auth_key(DB_PATH)
     if not project and path:
         project = os.path.basename(os.path.abspath(path))
 

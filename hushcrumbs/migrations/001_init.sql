@@ -8,6 +8,11 @@ INSERT INTO schema_version (version)
 SELECT 1
 WHERE NOT EXISTS (SELECT 1 FROM schema_version);
 
+CREATE TABLE IF NOT EXISTS auth_token (
+    id INTEGER PRIMARY KEY,
+    encrypted_value TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS context (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE
