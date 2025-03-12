@@ -1,10 +1,12 @@
 from fastapi import FastAPI, UploadFile, Form, HTTPException
+from contextlib import asynccontextmanager
 from fastapi.responses import PlainTextResponse, JSONResponse
 import tempfile
 import asyncio
 import os
+import sys
 from .parser import parse_env_file_contents
-from .queries import load_queries, export_snapshot_to_file
+from .queries import load_queries, export_snapshot_to_file, insert_snapshot_with_env_vars
 from .auth import validate_auth_key, get_token_validator
 import aiosqlite
 
@@ -12,13 +14,14 @@ import logging
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
-app = FastAPI(dependencies=[get_token_validator()])
 DB_PATH = os.environ.get("DB_PATH", os.path.abspath("db.sqlite"))
 
-@app.on_event("startup")
-async def log_db_path():
-    print("Using database at:", DB_PATH)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await validate_auth_key(DB_PATH)
+    yield
 
+app = FastAPI(dependencies=[get_token_validator()], lifespan=lifespan)
 
 @app.post("/snapshots/")
 async def upload_env_file(
@@ -36,7 +39,7 @@ async def upload_env_file(
     q = load_queries()
     await validate_auth_key(DB_PATH)
     try:
-        await q.insert_snapshot_with_env_vars(
+        await insert_snapshot_with_env_vars(
             db_path=DB_PATH,
             context=context,
             project=project,

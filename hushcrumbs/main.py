@@ -6,7 +6,7 @@ import pathlib
 import logging
 from tabulate import tabulate
 
-from .db import apply_migrations
+from .db import apply_migrations, ensure_database_is_ready
 from .queries import (
     load_queries,
     insert_snapshot_with_env_vars,
@@ -172,6 +172,10 @@ def list():
 def server(host, port, reload, token):
     """Run the hushcrumbs HTTP API server."""
     import uvicorn
+
+    if not os.path.exists(DB_PATH):
+        log.error("Database does not exist - please run init command.")
+        return 1
 
     os.environ["API_TOKEN"] = token
 
