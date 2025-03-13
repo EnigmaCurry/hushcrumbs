@@ -28,3 +28,6 @@ test: build
 clean:
 	@echo "🧹 Cleaning up build artifacts..."
 	@rm -rf build/ dist/ *.egg-info
+
+build-container:
+	podman build -t hushcrumbs .
