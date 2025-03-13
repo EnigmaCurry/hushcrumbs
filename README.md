@@ -48,7 +48,8 @@ You must set the `ENCRYPTION_KEY` variable with the value printed during
 initialization:
 
 ```bash
-export ENCRYPTION_KEY=xxxxxxxxxxxxxx
+# EXAMPLE: don't use this key!
+export ENCRYPTION_KEY=correct-horse-battery-staple-foo-bar-fee-fi-fo-fum
 ```
 
 ---
