@@ -14,12 +14,12 @@ may have some utility outside of this domain.
 ## ✨ Features
 
 - 📦 Store `.env` snapshots in SQLite
-- 🔐 Encrypt variable values (using [Fernet](https://cryptography.io/en/latest/fernet/))
-- 📝 Preserve multi-line comments for each variable
+- 🔐 Encrypt the variable values (using [Fernet](https://cryptography.io/en/latest/fernet/))
+- 📝 Preserve multi-line comments for each variable (also encrypted)
 - 🔁 Restore snapshots as `.env` files
 - 💻 CLI for automation and scripting
 - 🌐 HTTP API for integration
-- 🔑 Auth token validation to protect access
+- 🔑 API token validation to protect access to the HTTP service
 
 ---
 
