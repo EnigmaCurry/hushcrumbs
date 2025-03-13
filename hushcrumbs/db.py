@@ -4,21 +4,12 @@ import os
 from pathlib import Path
 import logging
 
-DB_PATH = "db.sqlite"
 MIGRATIONS_DIR = "migrations"
 
 log = logging.getLogger(__name__)
 
-async def ensure_database_is_ready():
-    # If the file doesn't exist, it will be created during migrations
-    db_exists = os.path.exists(DB_PATH)
-
-    if not db_exists:
-        log.error("Database not found. Creating and applying initial schema...")
-
-    await apply_migrations(DB_PATH)
-    log.info("Database is ready and up-to-date.")
-
+def get_db_path():
+    return os.environ.get("DB_PATH", os.path.abspath("db.sqlite"))
 
 async def get_current_version(db):
     try:
@@ -47,3 +38,14 @@ async def apply_migrations(db_path):
                     await db.executescript(f.read())
                 await set_version(db, version)
                 log.info(f"Migration {version} applied.")
+                log.info(f"Database is ready and up-to-date: {get_db_path()}")
+
+# async def ensure_database_is_ready():
+#     # If the file doesn't exist, it will be created during migrations
+#     db_exists = os.path.exists(get_db_path())
+
+#     if not db_exists:
+#         log.error("Database not found. Creating and applying initial schema...")
+
+#     await apply_migrations(get_db_path())
+#     log.info(f"Database is ready and up-to-date: {get_db_path()}")

@@ -1,4 +1,5 @@
 import os
+import re
 import asyncio
 import aiosqlite
 import logging
@@ -8,8 +9,27 @@ from fastapi import Request, HTTPException, status, Depends
 
 log = logging.getLogger(__name__)
 
-async def generate_auth_key(db_path: str):
-    passphrase = generate_passphrase()
+def validate_passphrase(passphrase: str) -> str:
+    """
+    Validates that the passphrase is a 10-word string joined by hyphens.
+    Each word must consist of only lowercase letters.
+    Returns the passphrase if valid, otherwise raises AssertionError
+    """
+    if passphrase is None:
+        raise AssertionError("ENCRYPTION_KEY is not set.")
+    if not isinstance(passphrase, str):
+        raise AssertionError("ENCRYPTION_KEY is not a string.")
+    words = passphrase.split("-")
+    if len(words) != 10:
+        raise AssertionError("ENCRYPTION_KEY is not 10 words long.")
+    # Match each word: only lowercase a-z
+    for word in words:
+        if not re.fullmatch(r"[a-z]+", word):
+            raise AssertionError("ENCRYPTION_KEY is not composed of 10 lowercase words.")
+    return passphrase
+
+async def save_auth_key(db_path: str):
+    passphrase = validate_passphrase(os.environ.get("ENCRYPTION_KEY", None))
     key = derive_key(passphrase)
     encrypted = encrypt_token(key)
     load_queries()

@@ -60,10 +60,7 @@ def validate_encrypted_token(encrypted: str, key: bytes) -> bool:
         if isinstance(key, str):
             key = key.encode()
 
-        print(f"key: {key}")
-        print(f"encrypted: {encrypted}")
         decrypted = Fernet(key).decrypt(encrypted.encode())
-        print(f"decrypted: {decrypted}")
         return decrypted == AUTH_CHECK_VALUE
 
     except InvalidToken:

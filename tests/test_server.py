@@ -14,34 +14,6 @@ DB_PATH = "test_api.sqlite"
 API_TOKEN = "test-token"
 ENCRYPTION_KEY = generate_passphrase()
 
-@pytest.fixture(scope="module", autouse=True)
-def setup_db():
-    os.environ["DB_PATH"] = DB_PATH
-    os.environ["ENCRYPTION_KEY"] = ENCRYPTION_KEY
-    print("ENCRYPTION_KEY (setup_db):", os.environ.get("ENCRYPTION_KEY", None))
-    os.environ["API_TOKEN"] = API_TOKEN
-
-    from hushcrumbs.server import app
-
-    # Initialize the DB
-    import asyncio
-    asyncio.run(apply_migrations(DB_PATH))
-
-    # Insert encrypted auth token
-    key = derive_key(ENCRYPTION_KEY)
-    encrypted_token = encrypt_token(key)
-    async def init_auth():
-        load_queries()
-        async with aiosqlite.connect(DB_PATH) as db:
-            await insert_auth_token(db, encrypted_token)
-            await db.commit()
-
-    asyncio.run(init_auth())
-
-    yield
-
-    os.remove(DB_PATH)
-
 @pytest.fixture
 def test_key_and_token():
     os.environ["ENCRYPTION_KEY"] = ENCRYPTION_KEY
@@ -105,6 +77,23 @@ def test_upload_snapshot(client):
 
 
 def test_list_snapshots_has_one(client):
+    # Ensure snapshot is added first
+    env_content = b"# Comment\nFOO=test1\nBAR=test2\n"
+    files = {
+        "file": ("env", env_content),
+    }
+    data = {
+        "context": "test",
+        "project": "demo",
+        "instance": "default",
+        "label": "v1",
+        "created_by": "test-suite"
+    }
+
+    upload_res = client.post("/snapshots/", data=data, files=files, headers=auth_headers())
+    assert upload_res.status_code == 200
+
+    # Now list and check snapshot
     res = client.get("/snapshots", headers=auth_headers())
     assert res.status_code == 200
     snapshots = res.json()
@@ -114,8 +103,24 @@ def test_list_snapshots_has_one(client):
     assert snapshots[0]["project"] == "demo"
     assert snapshots[0]["instance"] == "default"
 
-
 def test_download_snapshot(client):
+    # First, upload the snapshot
+    env_content = b"# Some comment\nFOO=value1\nBAR=value2\n"
+    files = {
+        "file": ("env", env_content),
+    }
+    data = {
+        "context": "test",
+        "project": "demo",
+        "instance": "default",
+        "label": "v1",
+        "created_by": "test-suite"
+    }
+
+    upload_res = client.post("/snapshots/", data=data, files=files, headers=auth_headers())
+    assert upload_res.status_code == 200
+
+    # Now, download it
     res = client.get(
         "/snapshots/test/demo/default",
         headers=auth_headers()

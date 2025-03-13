@@ -8,17 +8,16 @@ import sys
 from .parser import parse_env_file_contents
 from .queries import load_queries, export_snapshot_to_file, insert_snapshot_with_env_vars
 from .auth import validate_encryption_key, get_token_validator
+from .db import get_db_path
 import aiosqlite
 
 import logging
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
-DB_PATH = os.environ.get("DB_PATH", os.path.abspath("db.sqlite"))
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await validate_encryption_key(DB_PATH)
+    await validate_encryption_key(get_db_path())
     yield
 
 app = FastAPI(dependencies=[get_token_validator()], lifespan=lifespan)
@@ -37,10 +36,10 @@ async def upload_env_file(
 
     env_dict, env_comments = parse_env_file_contents(decoded)
     q = load_queries()
-    await validate_encryption_key(DB_PATH)
+    await validate_encryption_key(get_db_path())
     try:
         await insert_snapshot_with_env_vars(
-            db_path=DB_PATH,
+            db_path=get_db_path(),
             context=context,
             project=project,
             instance=instance,
@@ -59,9 +58,9 @@ async def upload_env_file(
 async def list_latest_snapshots():
     q = load_queries()
 
-    await validate_encryption_key(DB_PATH)
+    await validate_encryption_key(get_db_path())
 
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with aiosqlite.connect(get_db_path()) as db:
         db.row_factory = aiosqlite.Row
         rows = await q.get_latest_snapshots(db)
         return [dict(row) for row in rows]
@@ -69,7 +68,7 @@ async def list_latest_snapshots():
 @app.get("/snapshots/{context}/{project}/{instance}", response_class=PlainTextResponse)
 async def download_env_file(context: str, project: str, instance: str, snapshot: str = None):
     q = load_queries()
-    await validate_encryption_key(DB_PATH)
+    await validate_encryption_key(get_db_path())
 
     with tempfile.NamedTemporaryFile(delete=False) as tmp:
         path = tmp.name
@@ -77,7 +76,7 @@ async def download_env_file(context: str, project: str, instance: str, snapshot:
     try:
         try:
             count = await export_snapshot_to_file(
-                db_path=DB_PATH,
+                db_path=get_db_path(),
                 context=context,
                 project=project,
                 instance=instance,

@@ -6,17 +6,15 @@ import pathlib
 import logging
 from tabulate import tabulate
 
-from .db import apply_migrations, ensure_database_is_ready
+from .db import apply_migrations, get_db_path
 from .queries import (
     load_queries,
     insert_snapshot_with_env_vars,
     get_latest_snapshots,
     export_snapshot_to_file,
 )
-from .auth import generate_auth_key, validate_encryption_key
+from .auth import save_auth_key, validate_encryption_key
 from .parser import parse_env_file_contents
-
-DB_PATH = os.environ.get("DB_PATH", os.path.abspath("db.sqlite"))
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -31,10 +29,10 @@ def cli():
 @cli.command()
 def init():
     """Initialize the database."""
-    asyncio.run(apply_migrations(DB_PATH))
+    asyncio.run(apply_migrations(get_db_path()))
 
     async def _init():
-        passphrase, key = await generate_auth_key(DB_PATH)
+        passphrase, key = await save_auth_key(get_db_path())
         click.echo(
             "\nIMPORTANT - SAVE THIS KEY - YOU WILL NEED THIS KEY TO UNLOCK YOUR DATABASE!"
         )
@@ -60,7 +58,7 @@ def add(env_file, context, project, instance, label, force, created_by):
     env_path = pathlib.Path(env_file)
 
     load_queries()
-    asyncio.run(validate_encryption_key(DB_PATH))
+    asyncio.run(validate_encryption_key(get_db_path()))
     with open(env_path) as f:
         contents = f.read()
 
@@ -86,7 +84,7 @@ def add(env_file, context, project, instance, label, force, created_by):
     try:
         asyncio.run(
             insert_snapshot_with_env_vars(
-                db_path=DB_PATH,
+                db_path=get_db_path(),
                 context=context,
                 project=project,
                 instance=instance,
@@ -126,7 +124,7 @@ def restore(context, project, instance, snapshot, path, force):
         raise click.UsageError("You must provide either --project or PATH.")
 
     load_queries()
-    asyncio.run(validate_encryption_key(DB_PATH))
+    asyncio.run(validate_encryption_key(get_db_path()))
     if not project and path:
         project = os.path.basename(os.path.abspath(path))
 
@@ -145,7 +143,7 @@ def restore(context, project, instance, snapshot, path, force):
 
     count = asyncio.run(
         export_snapshot_to_file(
-            db_path=DB_PATH,
+            db_path=get_db_path(),
             context=context,
             project=project,
             instance=instance,
@@ -160,8 +158,12 @@ def restore(context, project, instance, snapshot, path, force):
 def list():
     """List the latest snapshot for each context/project/instance."""
     load_queries()
-    rows, headers = asyncio.run(get_latest_snapshots(DB_PATH))
-    print(tabulate(rows, headers=headers, tablefmt="plain"))
+    try:
+        rows, headers = asyncio.run(get_latest_snapshots(get_db_path()))
+    except TypeError:
+        return
+    else:
+        print(tabulate(rows, headers=headers, tablefmt="plain"))
 
 
 @cli.command()
@@ -173,7 +175,7 @@ def server(host, port, reload, token):
     """Run the hushcrumbs HTTP API server."""
     import uvicorn
 
-    if not os.path.exists(DB_PATH):
+    if not os.path.exists(get_db_path()):
         log.error("Database does not exist - please run init command.")
         return 1
 
