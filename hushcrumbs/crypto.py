@@ -16,7 +16,7 @@ AUTH_CHECK_VALUE = b"hushcrumbs-auth-check-text"
 AUTH_STATIC_SALT = b"hushcrumbs-static-salt"
 
 def generate_passphrase():
-    return "-".join(diceware(7))
+    return "-".join(diceware(10))
 
 def derive_key(passphrase):
     # Derive a 32-byte key from the passphrase
