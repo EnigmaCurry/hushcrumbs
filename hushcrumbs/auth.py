@@ -49,8 +49,6 @@ async def validate_encryption_key(db_path: str):
     encrypted = await load_encrypted_auth_text(db_path)
     if not validate_encrypted_token(encrypted, encryption_key.decode()):
         raise ValueError("Invalid encryption key or corrupted auth token")
-    else:
-        log.info("ENCRYPTION_KEY IS VALID.")
 
 def get_token_validator():
     expected_token = os.environ.get("API_TOKEN")
