@@ -164,7 +164,8 @@ Tests cover both the CLI and HTTP API. Snapshots are encrypted and validated.
 ## 🔒 Security
 
 - Variables are encrypted using [Fernet symmetric encryption](https://cryptography.io/en/latest/fernet/).
-- An encrypted auth token is stored in the DB and validated on every operation.
+- An encryption key is used to encrypt values in the DB, which is
+  validated on every operation.
 - The `ENCRYPTION_KEY` must be exported in the environment:
 
 ```bash
