@@ -154,7 +154,7 @@ curl -H "Authorization: Bearer {TOKEN}" http://localhost:8000/snapshots
 ## 🧪 Running Tests
 
 ```bash
-pytest
+make test
 ```
 
 Tests cover both the CLI and HTTP API. Snapshots are encrypted and validated.
