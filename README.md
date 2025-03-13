@@ -26,30 +26,43 @@ may have some utility outside of this domain.
 ## 🚀 Getting Started
 
 ### 📦 Install
+ 
+You need the following dependencies installed first:
+ 
+ * Python 3.13+
+ * Poetry (`pip instal poetry`)
+ * PipX (`pip install pipx`)
+
+Install hushcrumbs via the Makefile:
 
 ```bash
-poetry install
+make install
 ```
 
-Or clone and run directly with `python -m hushcrumbs`.
+### Generate an encryption key
+
+You must generate a 10 lower-case word encryption passphrase, joined with hyphens:
+
+```bash
+export ENCRYPTION_KEY=$(hushcrumbs gen-key)
+echo ${ENCRYPTION_KEY}
+```
+
+> 🛑 If you lose this key, you won't be able to decrypt your stored variables!
+
+You must have the `ENCRYPTION_KEY` environment variable set in order
+to use the rest of the commands. In the future you can set it like
+this:
+
+```bash
+# EXAMPLE: don't use this key!
+export ENCRYPTION_KEY=correct-horse-battery-staple-foo-bar-fee-fi-fo-fum
+```
 
 ### 🔐 Initialize the database
 
 ```bash
 hushcrumbs init
-```
-
-You'll be shown an **ENCRYPTION_KEY** environment variable you must store
-and set securely. This is used to encrypt and decrypt all secrets.
-
-> 🛑 If you lose this key, you won't be able to decrypt your stored variables!
-
-You must set the `ENCRYPTION_KEY` variable with the value printed during
-initialization:
-
-```bash
-# EXAMPLE: don't use this key!
-export ENCRYPTION_KEY=correct-horse-battery-staple-foo-bar-fee-fi-fo-fum
 ```
 
 ---

@@ -27,3 +27,6 @@ httpx = "^0.28.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+hushcrumbs = "hushcrumbs.main:cli"

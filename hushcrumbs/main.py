@@ -13,7 +13,7 @@ from .queries import (
     get_latest_snapshots,
     export_snapshot_to_file,
 )
-from .auth import save_auth_key, validate_encryption_key
+from .auth import save_auth_key, validate_encryption_key, generate_passphrase
 from .parser import parse_env_file_contents
 
 logging.basicConfig(level=logging.INFO)
@@ -24,6 +24,12 @@ log = logging.getLogger(__name__)
 def cli():
     """hushcrumbs - Manage .env files in sqlite"""
     pass
+
+
+@cli.command()
+def gen_key():
+    """Generate a secure encryption key"""
+    print(generate_passphrase())
 
 
 @cli.command()
