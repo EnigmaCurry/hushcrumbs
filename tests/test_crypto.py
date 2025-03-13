@@ -4,7 +4,8 @@ from cryptography.fernet import Fernet
 
 
 def test_generate_key_is_valid():
-    key = crypto.generate_key()
+    passphrase = crypto.generate_passphrase()
+    key = crypto.derive_key(passphrase)
     assert isinstance(key, bytes)
     # Should be 44-byte base64 encoded 32-byte key
     assert len(key) == 44
@@ -12,7 +13,8 @@ def test_generate_key_is_valid():
 
 
 def test_encrypt_decrypt_roundtrip():
-    key = crypto.generate_key()
+    passphrase = crypto.generate_passphrase()
+    key = crypto.derive_key(passphrase)
     f = Fernet(key)
 
     original = "SECRET=VALUE"
@@ -23,7 +25,8 @@ def test_encrypt_decrypt_roundtrip():
 
 
 def test_encrypt_value_and_decrypt_value(monkeypatch):
-    key = Fernet.generate_key()
+    passphrase = crypto.generate_passphrase()
+    key = crypto.derive_key(passphrase)
     monkeypatch.setenv("ENCRYPTION_KEY", key.decode())
 
     secret = "super_secret"

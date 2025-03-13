@@ -3,13 +3,14 @@ import asyncio
 import aiosqlite
 import logging
 from .queries import load_queries, insert_auth_token, load_encrypted_auth_text
-from .crypto import get_encryption_key, encrypt_token, validate_encrypted_token, generate_key
+from .crypto import get_encryption_key, encrypt_token, validate_encrypted_token, generate_passphrase, derive_key
 from fastapi import Request, HTTPException, status, Depends
 
 log = logging.getLogger(__name__)
 
 async def generate_auth_key(db_path: str):
-    key = generate_key()
+    passphrase = generate_passphrase()
+    key = derive_key(passphrase)
     encrypted = encrypt_token(key)
     load_queries()
     existing_token = await load_encrypted_auth_text(db_path)
@@ -20,15 +21,16 @@ async def generate_auth_key(db_path: str):
     async with aiosqlite.connect(db_path) as db:
         await insert_auth_token(db, encrypted_value=encrypted)
         await db.commit()
-    return key
+    return passphrase, key
 
-async def validate_auth_key(db_path: str):
+async def validate_encryption_key(db_path: str):
     load_queries()
     encryption_key = get_encryption_key()
     encrypted = await load_encrypted_auth_text(db_path)
     if not validate_encrypted_token(encrypted, encryption_key.decode()):
-        print("ENCRYPTION_KEY (validate_auth_key):", os.environ.get("ENCRYPTION_KEY", None))
         raise ValueError("Invalid encryption key or corrupted auth token")
+    else:
+        log.info("ENCRYPTION_KEY IS VALID.")
 
 def get_token_validator():
     expected_token = os.environ.get("API_TOKEN")

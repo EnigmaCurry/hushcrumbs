@@ -7,7 +7,7 @@ import os
 import sys
 from .parser import parse_env_file_contents
 from .queries import load_queries, export_snapshot_to_file, insert_snapshot_with_env_vars
-from .auth import validate_auth_key, get_token_validator
+from .auth import validate_encryption_key, get_token_validator
 import aiosqlite
 
 import logging
@@ -18,7 +18,7 @@ DB_PATH = os.environ.get("DB_PATH", os.path.abspath("db.sqlite"))
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await validate_auth_key(DB_PATH)
+    await validate_encryption_key(DB_PATH)
     yield
 
 app = FastAPI(dependencies=[get_token_validator()], lifespan=lifespan)
@@ -37,7 +37,7 @@ async def upload_env_file(
 
     env_dict, env_comments = parse_env_file_contents(decoded)
     q = load_queries()
-    await validate_auth_key(DB_PATH)
+    await validate_encryption_key(DB_PATH)
     try:
         await insert_snapshot_with_env_vars(
             db_path=DB_PATH,
@@ -59,7 +59,7 @@ async def upload_env_file(
 async def list_latest_snapshots():
     q = load_queries()
 
-    await validate_auth_key(DB_PATH)
+    await validate_encryption_key(DB_PATH)
 
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
@@ -69,7 +69,7 @@ async def list_latest_snapshots():
 @app.get("/snapshots/{context}/{project}/{instance}", response_class=PlainTextResponse)
 async def download_env_file(context: str, project: str, instance: str, snapshot: str = None):
     q = load_queries()
-    await validate_auth_key(DB_PATH)
+    await validate_encryption_key(DB_PATH)
 
     with tempfile.NamedTemporaryFile(delete=False) as tmp:
         path = tmp.name

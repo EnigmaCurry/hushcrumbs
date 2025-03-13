@@ -13,7 +13,7 @@ from .queries import (
     get_latest_snapshots,
     export_snapshot_to_file,
 )
-from .auth import generate_auth_key, validate_auth_key
+from .auth import generate_auth_key, validate_encryption_key
 from .parser import parse_env_file_contents
 
 DB_PATH = os.environ.get("DB_PATH", os.path.abspath("db.sqlite"))
@@ -34,11 +34,11 @@ def init():
     asyncio.run(apply_migrations(DB_PATH))
 
     async def _init():
-        key = await generate_auth_key(DB_PATH)
+        passphrase, key = await generate_auth_key(DB_PATH)
         click.echo(
             "\nIMPORTANT - SAVE THIS KEY - YOU WILL NEED THIS KEY TO UNLOCK YOUR DATABASE!"
         )
-        click.echo("ENCRYPTION_KEY=" + key.decode())
+        click.echo("ENCRYPTION_KEY=" + passphrase)
 
     asyncio.run(_init())
 
@@ -60,7 +60,7 @@ def add(env_file, context, project, instance, label, force, created_by):
     env_path = pathlib.Path(env_file)
 
     load_queries()
-    asyncio.run(validate_auth_key(DB_PATH))
+    asyncio.run(validate_encryption_key(DB_PATH))
     with open(env_path) as f:
         contents = f.read()
 
@@ -126,7 +126,7 @@ def restore(context, project, instance, snapshot, path, force):
         raise click.UsageError("You must provide either --project or PATH.")
 
     load_queries()
-    asyncio.run(validate_auth_key(DB_PATH))
+    asyncio.run(validate_encryption_key(DB_PATH))
     if not project and path:
         project = os.path.basename(os.path.abspath(path))
 

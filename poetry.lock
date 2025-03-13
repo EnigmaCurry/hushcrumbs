@@ -244,6 +244,17 @@ test = ["certifi (>=2024)", "cryptography-vectors (==44.0.2)", "pretend (>=0.7)"
 test-randomorder = ["pytest-randomly"]
 
 [[package]]
+name = "dicewarepy"
+version = "1.0.3"
+description = "Minimalist Python library designed for the random selection of words from cryptographic wordlists, utilizing the Diceware method."
+optional = false
+python-versions = "*"
+files = [
+    {file = "dicewarepy-1.0.3-py3-none-any.whl", hash = "sha256:16b9a588973072f41e6ca0c1310f7cdc837cb5c33b2c6d11b8ea395f9dccf5f6"},
+    {file = "dicewarepy-1.0.3.tar.gz", hash = "sha256:82f9ba2161fd74bf01906d6ec386dcbe2631b9b34dd83c1884f83c561b4afbbc"},
+]
+
+[[package]]
 name = "fastapi"
 version = "0.115.11"
 description = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
@@ -636,4 +647,4 @@ standard = ["colorama (>=0.4)", "httptools (>=0.6.3)", "python-dotenv (>=0.13)",
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.13"
-content-hash = "242e9fcad1a360bc55d88efd2e198d6d861ab078f3e7460f82ea3b9797bc7e94"
+content-hash = "b4a44017a611e45a90a1b90d09c755b442f6cef283c668db2ade7ccf7115c0d0"

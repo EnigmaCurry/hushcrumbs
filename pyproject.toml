@@ -16,6 +16,7 @@ cryptography = "^44.0.2"
 fastapi = "^0.115.11"
 uvicorn = "^0.34.0"
 python-multipart = "^0.0.20"
+dicewarepy = "^1.0.3"
 
 
 [tool.poetry.group.dev.dependencies]
