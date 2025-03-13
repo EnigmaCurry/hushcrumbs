@@ -24,7 +24,9 @@ FROM python:3.13-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app \
-    DB_PATH=/data/db.sqlite
+    DB_PATH=/data/db.sqlite \
+    ENCRYPTION_KEY= \
+    API_TOKEN=
 
 WORKDIR /app
 
@@ -43,4 +45,4 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD python -m hushcrumbs server --host 0.0.0.0 --port 80 --token asdf
+CMD python -m hushcrumbs server --host 0.0.0.0 --port 80 --token ${API_TOKEN}
