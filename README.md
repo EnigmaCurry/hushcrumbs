@@ -171,8 +171,12 @@ Tests cover both the CLI and HTTP API. Snapshots are encrypted and validated.
 export ENCRYPTION_KEY=...
 ```
 
-- The HTTP server protects access using a separate bearer token, not to be
-  confused with the `ENCRYPTION_KEY`.
+- The encryption key cannot be easily changed (yet), so make sure to
+  keep it a secret on the backend.
+- The HTTP server protects access using a separate bearer token (set
+  via `hushcrumbs server --token XXX`). The token should NOT be the
+  same as `ENCRYPTION_KEY`! You may freely change the token at any
+  time (but you must restart the server).
 
 ---
 
