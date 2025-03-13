@@ -19,8 +19,8 @@ may have some utility outside of this domain.
 - 🔁 Restore snapshots as `.env` files
 - 💻 CLI for automation and scripting
 - 🌐 HTTP API for integration
+- 🐋 Dockerfile to build OCI container
 - 🔑 API token validation to protect access to the HTTP service
-
 ---
 
 ## 🚀 Getting Started
@@ -30,7 +30,7 @@ may have some utility outside of this domain.
 You need the following dependencies installed first:
  
  * Python 3.13+
- * Poetry (`pip instal poetry`)
+ * Poetry (`pip install poetry`)
  * PipX (`pip install pipx`)
 
 Install hushcrumbs via the Makefile:
