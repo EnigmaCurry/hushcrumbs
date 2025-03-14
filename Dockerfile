@@ -37,12 +37,12 @@ COPY . .
 # Ensure the database volume is writable
 VOLUME /data
 
-# Expose port 80
-EXPOSE 80
+# Expose port 8000
+EXPOSE 8000
 
 # Copy the entrypoint script
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD python -m hushcrumbs server --host 0.0.0.0 --port 80 --token ${API_TOKEN}
+CMD python -m hushcrumbs server --host 0.0.0.0 --port 8000 --token ${API_TOKEN}
