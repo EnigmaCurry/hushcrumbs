@@ -4,7 +4,9 @@ import click
 import asyncio
 import pathlib
 import logging
+import signal
 from tabulate import tabulate
+from uvicorn import Config, Server
 
 from .db import apply_migrations, get_db_path
 from .queries import (
@@ -171,7 +173,6 @@ def list():
     else:
         print(tabulate(rows, headers=headers, tablefmt="plain"))
 
-
 @cli.command()
 @click.option("--host", default="127.0.0.1", help="Host to bind to.")
 @click.option("--port", default=8000, help="Port to listen on.")
@@ -179,23 +180,35 @@ def list():
 @click.option("--token", required=True, help="Token required for accessing the API.")
 def server(host, port, reload, token):
     """Run the hushcrumbs HTTP API server."""
-    import uvicorn
+    from hushcrumbs import server as server_module
 
     if not os.path.exists(get_db_path()):
         log.error("Database does not exist - please run init command.")
-        return 1
+        raise SystemExit(1)
 
     os.environ["API_TOKEN"] = token
 
-    config = {
-        "app": "hushcrumbs.server:app",
-        "host": host,
-        "port": port,
-        "reload": reload,
-        "factory": False,
-    }
+    config = Config(
+        app=server_module.app,
+        host=host,
+        port=port,
+        reload=reload,
+        loop="asyncio",
+    )
+    server = Server(config)
+
+    def handle_shutdown(signum, frame):
+        log.info(f"Received signal {signum}, initiating shutdown...")
+        # This tells the server to shut down cleanly
+        server.should_exit = True
+
+    signal.signal(signal.SIGTERM, handle_shutdown)
+    signal.signal(signal.SIGINT, handle_shutdown)
+
     click.echo(f"🌐 Starting hushcrumbs API at http://{host}:{port}")
-    uvicorn.run(**config)
+
+    # This blocks until the server exits
+    asyncio.run(server.serve())
 
 
 @cli.command()
