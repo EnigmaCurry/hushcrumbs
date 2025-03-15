@@ -22,6 +22,11 @@ RUN touch README.md && \
 # --------------------
 FROM python:3.13-slim
 
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends tini && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app \
     DB_PATH=/data/db.sqlite \
@@ -44,5 +49,5 @@ EXPOSE 8000
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/entrypoint.sh"]
 CMD python -m hushcrumbs server --host 0.0.0.0 --port 8000 --token ${API_TOKEN}
